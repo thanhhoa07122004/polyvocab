@@ -47,7 +47,14 @@
 
                     <span class="text-xs text-slate-300">&bull;</span>
                     <span class="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700 border border-indigo-100">
-                        {{ number_format($totalEntriesCount) }} mục từ
+                        {{ number_format($totalEntriesCount) }} từ
+                    </span>
+
+                    <span class="text-xs text-slate-300">&bull;</span>
+                    <span class="inline-flex items-center space-x-1.5 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-700 border border-slate-200" title="Cặp ngôn ngữ học">
+                        <span lang="{{ $deck->learningLanguage->code }}" dir="{{ $deck->learningLanguage->direction }}">{{ $deck->learningLanguage->name }}</span>
+                        <span class="text-slate-400 font-normal">&rarr;</span>
+                        <span lang="{{ $deck->meaningLanguage->code }}" dir="{{ $deck->meaningLanguage->direction }}">{{ $deck->meaningLanguage->name }}</span>
                     </span>
                 </div>
 
@@ -65,8 +72,8 @@
                     </p>
                 @endif
 
-                <!-- Thông tin tác giả & ngày tạo -->
-                <div class="flex flex-wrap items-center gap-4 text-xs text-slate-500 pt-2">
+                <!-- Thông tin tác giả, ngày tạo & ngôn ngữ -->
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-500 pt-1">
                     <div class="flex items-center space-x-1.5">
                         <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -82,24 +89,32 @@
                         </svg>
                         <span>Ngày tạo: {{ $deck->created_at ? $deck->created_at->format('d/m/Y') : '' }}</span>
                     </div>
+
+                    <span>&bull;</span>
+
+                    <div class="flex items-center space-x-1.5">
+                        <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                        </svg>
+                        <span>
+                            <strong class="font-medium text-slate-700">{{ $deck->learningLanguage->name }}</strong>
+                            @if ($deck->learningLanguage->native_name)
+                                <span class="text-slate-500 font-normal" lang="{{ $deck->learningLanguage->code }}" dir="{{ $deck->learningLanguage->direction }}">({{ $deck->learningLanguage->native_name }})</span>
+                            @endif
+                            <span class="text-slate-400 font-mono text-[11px]">[{{ $deck->learningLanguage->code }}]</span>
+                            <span class="text-slate-400">&rarr;</span>
+                            <strong class="font-medium text-slate-700">{{ $deck->meaningLanguage->name }}</strong>
+                            @if ($deck->meaningLanguage->native_name)
+                                <span class="text-slate-500 font-normal" lang="{{ $deck->meaningLanguage->code }}" dir="{{ $deck->meaningLanguage->direction }}">({{ $deck->meaningLanguage->native_name }})</span>
+                            @endif
+                            <span class="text-slate-400 font-mono text-[11px]">[{{ $deck->meaningLanguage->code }}]</span>
+                        </span>
+                    </div>
                 </div>
             </div>
 
             <!-- Thao tác của người học & chủ sở hữu -->
             <div class="flex flex-wrap items-center gap-2 shrink-0">
-                @auth
-                    @if ($totalEntriesCount > 0)
-                        <a href="{{ route('study.new.prepare', $deck) }}"
-                           class="inline-flex items-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-500 transition">
-                            <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            Học từ mới
-                        </a>
-                    @endif
-                @endauth
-
                 @can('update', $deck)
                     <a href="{{ route('decks.entries.create', $deck) }}"
                        class="inline-flex items-center rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 transition">
@@ -127,37 +142,6 @@
                 @endcan
             </div>
         </div>
-
-        <!-- Cặp ngôn ngữ học -->
-        <div class="mt-8 border-t border-slate-100 pt-6">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-4">
-                    <div class="text-xs font-semibold uppercase tracking-wider text-indigo-700">Ngôn ngữ đang học (Từ vựng & Ví dụ)</div>
-                    <div class="mt-2 flex items-baseline space-x-2">
-                        <span class="text-lg font-bold text-slate-900">{{ $deck->learningLanguage->name }}</span>
-                        <span class="text-sm font-medium text-slate-600"
-                              lang="{{ $deck->learningLanguage->code }}"
-                              dir="{{ $deck->learningLanguage->direction }}">({{ $deck->learningLanguage->native_name }})</span>
-                    </div>
-                    <div class="mt-1 text-xs text-slate-500 font-mono">
-                        Mã: {{ $deck->learningLanguage->code }} &bull; Hướng chữ: {{ strtoupper($deck->learningLanguage->direction) }}
-                    </div>
-                </div>
-
-                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <div class="text-xs font-semibold uppercase tracking-wider text-slate-600">Ngôn ngữ giải nghĩa (Nghĩa & Bản dịch)</div>
-                    <div class="mt-2 flex items-baseline space-x-2">
-                        <span class="text-lg font-bold text-slate-900">{{ $deck->meaningLanguage->name }}</span>
-                        <span class="text-sm font-medium text-slate-600"
-                              lang="{{ $deck->meaningLanguage->code }}"
-                              dir="{{ $deck->meaningLanguage->direction }}">({{ $deck->meaningLanguage->native_name }})</span>
-                    </div>
-                    <div class="mt-1 text-xs text-slate-500 font-mono">
-                        Mã: {{ $deck->meaningLanguage->code }} &bull; Hướng chữ: {{ strtoupper($deck->meaningLanguage->direction) }}
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- Trung tâm học tập bộ từ (Study Center) -->
@@ -168,39 +152,39 @@
                     Tiến độ & Chế độ học tập
                 </h2>
                 <p class="text-xs sm:text-sm text-slate-500 mt-0.5">
-                    Đơn vị tiến độ cốt lõi là một <strong>nghĩa</strong> (một từ có thể có nhiều nghĩa).
+                    Một từ có thể có nhiều nghĩa — mỗi nghĩa là một phần cần ghi nhớ.
                 </p>
             </div>
             <span class="inline-flex items-center text-xs text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
-                {{ number_format($totalEntriesCount) }} mục từ &bull; {{ number_format($totalMeaningsCount) }} nét nghĩa
+                {{ number_format($totalEntriesCount) }} từ &bull; {{ number_format($totalMeaningsCount) }} nghĩa
             </span>
         </div>
 
         @auth
             <!-- Ô thống kê tiến độ cá nhân -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-                <div class="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
-                    <span class="text-xs font-medium text-slate-500 block">Tổng số nghĩa</span>
+                <div class="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 deck-stat-card deck-stat-total">
+                    <span class="text-xs font-medium text-slate-500 block">Tổng số từ vựng</span>
                     <span class="text-xl font-bold text-slate-900 mt-1 block">{{ number_format($totalMeaningsCount) }}</span>
-                    <span class="text-[11px] text-slate-400 mt-0.5 block">trong {{ number_format($totalEntriesCount) }} mục từ</span>
+                    <span class="text-[11px] text-slate-400 mt-0.5 block">trong {{ number_format($totalEntriesCount) }} từ</span>
                 </div>
-                <div class="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-4">
-                    <span class="text-xs font-semibold text-emerald-700 block">Nghĩa chưa học</span>
+                <div class="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-4 deck-stat-card deck-stat-unstudied">
+                    <span class="text-xs font-semibold text-emerald-700 block">Từ chưa học</span>
                     <span class="text-xl font-bold text-emerald-900 mt-1 block">{{ number_format($studyStats['unstudied_count']) }}</span>
                     <span class="text-[11px] text-emerald-600 mt-0.5 block">Sẵn sàng để học mới</span>
                 </div>
-                <div class="rounded-2xl border border-amber-100 bg-amber-50/50 p-4">
-                    <span class="text-xs font-semibold text-amber-700 block">Nghĩa đến hạn</span>
+                <div class="rounded-2xl border border-amber-100 bg-amber-50/50 p-4 deck-stat-card deck-stat-due">
+                    <span class="text-xs font-semibold text-amber-700 block">Từ đến hạn ôn</span>
                     <div class="flex items-baseline space-x-1.5 mt-1">
                         <span class="text-xl font-bold text-amber-900">{{ number_format($studyStats['due_count']) }}</span>
                         @if ($studyStats['overdue_count'] > 0)
                             <span class="text-xs font-semibold text-rose-600">({{ $studyStats['overdue_count'] }} quá hạn)</span>
                         @endif
                     </div>
-                    <span class="text-[11px] text-amber-600 mt-0.5 block">Cần ôn theo lịch SRS</span>
+                    <span class="text-[11px] text-amber-600 mt-0.5 block">Cần ôn theo lịch</span>
                 </div>
-                <div class="rounded-2xl border border-rose-100 bg-rose-50/50 p-4">
-                    <span class="text-xs font-semibold text-rose-700 block">Nghĩa khó / Yếu</span>
+                <div class="rounded-2xl border border-rose-100 bg-rose-50/50 p-4 deck-stat-card deck-stat-difficult">
+                    <span class="text-xs font-semibold text-rose-700 block">Từ cần nhớ kỹ</span>
                     <span class="text-xl font-bold text-rose-900 mt-1 block">{{ number_format($studyStats['difficult_count']) }}</span>
                     <span class="text-[11px] text-rose-600 mt-0.5 block">Cần củng cố thêm</span>
                 </div>
@@ -218,11 +202,11 @@
                         </div>
                         <div>
                             <div class="flex items-center gap-2">
-                                <span class="font-bold text-sm text-slate-900">Phiên đang dở: {{ $activeSess->mode->label() }}</span>
+                                <span class="font-bold text-sm text-slate-900">BẠN ĐANG HỌC DỞ: {{ $activeSess->mode->label() }}</span>
                                 <span class="text-[10px] bg-amber-200 text-amber-800 px-2 py-0.5 rounded font-semibold">{{ $activeSess->stage->label() }}</span>
                             </div>
                             <p class="text-xs text-slate-600 mt-1">
-                                Tiến độ: <strong>{{ $activeSess->completedItemsCount() }}/{{ $activeSess->items->count() }} nghĩa</strong> &bull;
+                                Tiến độ: <strong>{{ $activeSess->completedItemsCount() }}/{{ $activeSess->items->count() }} từ</strong> &bull;
                                 Cập nhật: {{ $activeSess->last_interacted_at ? $activeSess->last_interacted_at->diffForHumans() : 'Vừa xong' }}
                             </p>
                         </div>
@@ -230,13 +214,13 @@
                     <div class="flex items-center gap-2 shrink-0">
                         <a href="{{ route('study.session.show', $activeSess) }}"
                            class="inline-flex items-center rounded-xl bg-amber-600 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-amber-500 transition">
-                            Tiếp tục phiên &rarr;
+                            Tiếp tục học &rarr;
                         </a>
                         <form method="POST" action="{{ route('study.session.abandon', $activeSess) }}"
-                              onsubmit="return confirm('Bạn có chắc muốn kết thúc phiên dở dang này để bắt đầu phiên mới?');">
+                              onsubmit="return confirm('Kết quả đã lưu vẫn được giữ. Phần chưa học sẽ được trả về danh sách để bạn chọn lại.');">
                             @csrf
                             <button type="submit" class="rounded-xl border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition cursor-pointer">
-                                Kết thúc phiên cũ
+                                Kết thúc lần học này
                             </button>
                         </form>
                     </div>
@@ -259,13 +243,13 @@
                                 <span class="text-xs font-bold text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-full">{{ $studyStats['unstudied_count'] }} mới</span>
                             </div>
                             <h3 class="font-bold text-sm text-slate-900 mt-3 group-hover:text-emerald-700 transition">Học từ mới</h3>
-                            <p class="text-xs text-slate-500 mt-1 leading-relaxed">Làm quen và luyện nhớ các nghĩa chưa học, khởi tạo lịch ôn SRS.</p>
+                            <p class="text-xs text-slate-500 mt-1 leading-relaxed">Làm quen và ghi nhớ các từ mới trong bộ từ này.</p>
                         </div>
                         <span class="text-xs font-semibold text-emerald-600 mt-4 block">Bắt đầu học &rarr;</span>
                     </a>
                 @else
-                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 opacity-75 flex flex-col justify-between cursor-not-allowed"
-                         title="Đã học hết tất cả các nghĩa trong bộ từ này!">
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 opacity-75 flex flex-col justify-between cursor-not-allowed deck-mode-card-disabled"
+                         title="Đã học hết tất cả các từ trong bộ từ này!">
                         <div>
                             <div class="flex items-center justify-between">
                                 <span class="p-2 rounded-xl bg-slate-300 text-slate-600">
@@ -276,7 +260,7 @@
                                 <span class="text-[11px] font-semibold text-slate-500 bg-slate-200 px-2 py-0.5 rounded-full">Đã học hết</span>
                             </div>
                             <h3 class="font-bold text-sm text-slate-700 mt-3">Học từ mới</h3>
-                            <p class="text-xs text-slate-500 mt-1 leading-relaxed">Không còn nghĩa mới. Bạn đã làm quen tất cả các nghĩa trong bộ này.</p>
+                            <p class="text-xs text-slate-500 mt-1 leading-relaxed">Bạn đã làm quen tất cả các từ trong bộ này.</p>
                         </div>
                         <span class="text-xs text-slate-400 mt-4 block italic">Chưa có nghĩa mới</span>
                     </div>
@@ -296,13 +280,13 @@
                                 <span class="text-xs font-bold text-amber-700 bg-amber-100/70 px-2 py-0.5 rounded-full">{{ $studyStats['due_count'] }} đến hạn</span>
                             </div>
                             <h3 class="font-bold text-sm text-slate-900 mt-3 group-hover:text-amber-700 transition">Ôn đến hạn</h3>
-                            <p class="text-xs text-slate-500 mt-1 leading-relaxed">Củng cố các nghĩa theo chu kỳ lặp lại ngắt quãng (SRS).</p>
+                            <p class="text-xs text-slate-500 mt-1 leading-relaxed">Ôn lại các từ cần củng cố theo chu kỳ ngắt quãng.</p>
                         </div>
                         <span class="text-xs font-semibold text-amber-600 mt-4 block">Bắt đầu ôn &rarr;</span>
                     </a>
                 @else
-                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 opacity-75 flex flex-col justify-between cursor-not-allowed"
-                         title="Chưa có nghĩa nào đến hạn ôn tập theo lịch SRS.">
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 opacity-75 flex flex-col justify-between cursor-not-allowed deck-mode-card-disabled"
+                         title="Chưa có từ nào đến hạn ôn tập hôm nay.">
                         <div>
                             <div class="flex items-center justify-between">
                                 <span class="p-2 rounded-xl bg-slate-300 text-slate-600">
@@ -313,7 +297,7 @@
                                 <span class="text-[11px] font-semibold text-slate-500 bg-slate-200 px-2 py-0.5 rounded-full">0 đến hạn</span>
                             </div>
                             <h3 class="font-bold text-sm text-slate-700 mt-3">Ôn đến hạn</h3>
-                            <p class="text-xs text-slate-500 mt-1 leading-relaxed">Chưa có nghĩa nào đến hạn ôn tập hôm nay.</p>
+                            <p class="text-xs text-slate-500 mt-1 leading-relaxed">Chưa có từ nào đến hạn ôn tập hôm nay.</p>
                         </div>
                         <span class="text-xs text-slate-400 mt-4 block italic">Chưa đến hạn</span>
                     </div>
@@ -338,10 +322,10 @@
                         <span class="text-xs font-semibold text-indigo-600 mt-4 block">Tùy chọn luyện &rarr;</span>
                     </a>
                 @else
-                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 opacity-75 flex flex-col justify-between cursor-not-allowed">
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 opacity-75 flex flex-col justify-between cursor-not-allowed deck-mode-card-disabled">
                         <div>
                             <h3 class="font-bold text-sm text-slate-700">Luyện theo dạng bài</h3>
-                            <p class="text-xs text-slate-500 mt-1 leading-relaxed">Bộ từ chưa có mục từ nào.</p>
+                            <p class="text-xs text-slate-500 mt-1 leading-relaxed">Bộ từ chưa có từ vựng nào.</p>
                         </div>
                         <span class="text-xs text-slate-400 mt-4 block italic">Chưa có dữ liệu</span>
                     </div>
@@ -361,13 +345,13 @@
                                 <span class="text-xs font-bold text-rose-700 bg-rose-100/70 px-2 py-0.5 rounded-full">{{ $studyStats['difficult_count'] }} mục</span>
                             </div>
                             <h3 class="font-bold text-sm text-slate-900 mt-3 group-hover:text-rose-700 transition">Luyện từ khó</h3>
-                            <p class="text-xs text-slate-500 mt-1 leading-relaxed">Củng cố các nghĩa được đánh dấu khó hoặc hay quên.</p>
+                            <p class="text-xs text-slate-500 mt-1 leading-relaxed">Củng cố các từ bạn đã đánh dấu khó hoặc hay quên.</p>
                         </div>
                         <span class="text-xs font-semibold text-rose-600 mt-4 block">Luyện từ khó &rarr;</span>
                     </a>
                 @else
-                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 opacity-75 flex flex-col justify-between cursor-not-allowed"
-                         title="Chưa có nghĩa nào được đánh dấu khó hoặc có kết quả yếu.">
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 opacity-75 flex flex-col justify-between cursor-not-allowed deck-mode-card-disabled"
+                         title="Chưa có từ nào được đánh dấu khó hoặc cần luyện thêm.">
                         <div>
                             <div class="flex items-center justify-between">
                                 <span class="p-2 rounded-xl bg-slate-300 text-slate-600">
@@ -378,7 +362,7 @@
                                 <span class="text-[11px] font-semibold text-slate-500 bg-slate-200 px-2 py-0.5 rounded-full">0 từ khó</span>
                             </div>
                             <h3 class="font-bold text-sm text-slate-700 mt-3">Luyện từ khó</h3>
-                            <p class="text-xs text-slate-500 mt-1 leading-relaxed">Chưa có nghĩa nào được đánh dấu khó hoặc hay quên trong bộ này.</p>
+                            <p class="text-xs text-slate-500 mt-1 leading-relaxed">Chưa có từ nào được đánh dấu khó trong bộ từ này.</p>
                         </div>
                         <span class="text-xs text-slate-400 mt-4 block italic">Chưa có từ khó</span>
                     </div>
@@ -388,7 +372,7 @@
             <!-- Lời nhắc dành cho Khách chưa đăng nhập -->
             <div class="rounded-2xl border border-indigo-100 bg-indigo-50/50 p-6 text-center space-y-3">
                 <p class="text-sm text-indigo-900 font-medium">
-                    Hãy đăng nhập để theo dõi tiến độ từng nét nghĩa, kích hoạt Spaced Repetition (SRS) và lưu lịch sử học tập.
+                    Hãy đăng nhập để theo dõi tiến độ từng nét nghĩa, ghi nhớ lâu dài và lưu lịch sử học tập.
                 </p>
                 <div class="flex items-center justify-center gap-3">
                     <a href="{{ route('login') }}" class="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-indigo-500 transition">
@@ -410,7 +394,7 @@
                     Danh sách từ vựng
                 </h2>
                 <p class="mt-0.5 text-xs text-slate-500">
-                    Tổng số: <strong class="font-semibold text-slate-700">{{ number_format($totalEntriesCount) }}</strong> mục từ
+                    Tổng số: <strong class="font-semibold text-slate-700">{{ number_format($totalEntriesCount) }}</strong> từ vựng
                 </p>
             </div>
 
@@ -520,7 +504,7 @@
                                 </a>
 
                                 <form method="POST" action="{{ route('decks.entries.destroy', [$deck, $entry]) }}"
-                                      onsubmit="return confirm('Bạn có chắc muốn xóa mục từ « {{ addslashes($entry->term) }} » khỏi bộ từ?');"
+                                      onsubmit="return confirm('Bạn có chắc muốn xóa từ « {{ addslashes($entry->term) }} » khỏi bộ từ?');"
                                       class="inline">
                                     @csrf
                                     @method('DELETE')
@@ -563,7 +547,7 @@
                 @else
                     <h3 class="text-base font-bold text-slate-900">Chưa có từ vựng</h3>
                     <p class="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
-                        Bộ từ này hiện chưa có mục từ vựng nào.
+                        Bộ từ này hiện chưa có từ vựng nào.
                         @can('update', $deck)
                             Hãy thêm từ đầu tiên để bắt đầu lưu trữ và ôn tập!
                         @endcan
@@ -576,7 +560,7 @@
                                 <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                 </svg>
-                                Thêm mục từ đầu tiên
+                                Thêm từ đầu tiên
                             </a>
                         </div>
                     @endcan

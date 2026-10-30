@@ -13,14 +13,14 @@
         <div class="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
                 <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-                    Ôn tập lặp lại ngắt quãng (SRS)
+                    Ôn tập từ vựng
                 </h1>
                 <p class="mt-1 text-sm text-slate-600">
-                    Củng cố các nét nghĩa đã học đúng thời điểm vàng của trí nhớ để ghi nhớ dài hạn bền vững.
+                    Ôn lại các từ đã học đúng lúc để ghi nhớ lâu hơn.
                 </p>
             </div>
             <div class="inline-flex items-center self-start rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 border border-amber-200">
-                Chính sách: Giãn cách 1-3-7-14-30 ngày
+                Lịch ôn ngắt quãng
             </div>
         </div>
     </div>
@@ -48,25 +48,25 @@
                 </div>
                 <div class="flex-1">
                     <span class="inline-flex items-center rounded-md bg-amber-200 px-2 py-0.5 text-xs font-bold text-amber-900">
-                        Phiên ôn tập đang dở dang
+                        BẠN ĐANG ÔN DỞ
                     </span>
                     <h2 class="mt-1 text-lg font-bold text-slate-900">
                         {{ $activeReviewSession->deck->name }}
                     </h2>
                     <p class="mt-1 text-xs text-slate-600">
                         Đã ôn: <span class="font-bold text-amber-900">{{ $activeReviewSession->completedItemsCount() }}/{{ $activeReviewSession->items->count() }} nghĩa</span> &bull;
-                        Tương tác gần nhất: {{ $activeReviewSession->last_interacted_at ? $activeReviewSession->last_interacted_at->diffForHumans() : 'Vừa xong' }}
+                        Học gần nhất: {{ $activeReviewSession->last_interacted_at ? $activeReviewSession->last_interacted_at->diffForHumans() : 'Vừa xong' }}
                     </p>
                     <div class="mt-4 flex items-center gap-3">
                         <a href="{{ route('study.session.show', $activeReviewSession) }}"
                            class="inline-flex items-center rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white shadow-2xs hover:bg-amber-700 transition">
-                            Tiếp tục phiên ôn &rarr;
+                            Tiếp tục ôn &rarr;
                         </a>
                         <form method="POST" action="{{ route('study.session.abandon', $activeReviewSession) }}"
-                              onsubmit="return confirm('Bạn có chắc muốn kết thúc phiên ôn tập này?');">
+                              onsubmit="return confirm('Kết quả đã lưu vẫn được giữ. Phần chưa học sẽ được trả về danh sách để bạn chọn lại.');">
                             @csrf
                             <button type="submit" class="text-xs font-semibold text-slate-600 hover:text-rose-600 transition cursor-pointer">
-                                Hủy phiên dở dang
+                                Kết thúc lần ôn này
                             </button>
                         </form>
                     </div>
@@ -86,7 +86,7 @@
             <div class="rounded-2xl bg-rose-50/60 p-4 border border-rose-100">
                 <div class="text-xs font-medium text-rose-800">Trong đó đã quá hạn</div>
                 <div class="mt-1 text-2xl font-black text-rose-700">{{ $overdueCount }}</div>
-                <p class="mt-1 text-2xs text-rose-800/80">Quá hạn > 24 giờ (thuộc tổng đến hạn)</p>
+                <p class="mt-1 text-2xs text-rose-800/80">Quá hạn > 24 giờ</p>
             </div>
             <div class="rounded-2xl bg-slate-50 p-4 border border-slate-100">
                 <div class="text-xs font-medium text-slate-500">Lịch ôn tiếp theo</div>
@@ -94,7 +94,7 @@
                     {{ $nextDueAt ? $nextDueAt->format('H:i, d/m/Y') : 'Không có' }}
                 </div>
                 <p class="mt-1 text-2xs text-slate-500">
-                    {{ $nextDueAt ? $nextDueAt->diffForHumans() : 'Hiện đã hết từ đến hạn' }}
+                    {{ $nextDueAt ? $nextDueAt->diffForHumans() : 'Hiện chưa có từ nào đến hạn' }}
                 </p>
             </div>
         </div>
@@ -136,17 +136,17 @@
                 </div>
             </div>
 
-            <!-- 2. Số lượng nghĩa muốn ôn -->
+            <!-- 2. Số lượng từ muốn ôn -->
             <div class="space-y-3 pt-4 border-t border-slate-100">
                 <label for="countInput" class="block text-sm font-bold text-slate-900">
-                    Số nghĩa muốn ôn trong phiên:
+                    Số từ muốn ôn:
                 </label>
                 <div class="flex flex-wrap items-center gap-2">
                     @foreach ($presets as $p)
                         <button type="button"
                                 onclick="document.getElementById('countInput').value = {{ $p }}"
                                 class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-amber-50 hover:text-amber-800 hover:border-amber-300 transition cursor-pointer">
-                            {{ $p }} nghĩa
+                            {{ $p }} từ
                         </button>
                     @endforeach
                 </div>
@@ -159,7 +159,7 @@
                            max="50"
                            required
                            class="w-28 rounded-xl border border-slate-300 px-3 py-2 text-center text-sm font-bold text-slate-900 shadow-2xs focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20">
-                    <span class="text-xs text-slate-500">nghĩa (Tối đa 50 nghĩa mỗi phiên)</span>
+                    <span class="text-xs text-slate-500">từ (Tối đa 50 từ mỗi lần)</span>
                 </div>
             </div>
 
@@ -172,9 +172,9 @@
                            {{ $totalDue === 0 ? 'checked' : '' }}
                            class="mt-0.5 h-4 w-4 rounded-md border-slate-300 text-amber-600 focus:ring-amber-500">
                     <div class="text-xs">
-                        <span class="font-bold text-slate-800">Chế độ “Luyện thêm tự chọn ngoài lịch”</span>
+                        <span class="font-bold text-slate-800">Luyện thêm tự do</span>
                         <p class="text-slate-500 mt-0.5">
-                            Cho phép luyện lại các nghĩa đã học ngay cả khi chưa đến hạn. Chế độ này mặc định không làm biến động lịch ôn tập SRS chuẩn.
+                            Luyện lại các nghĩa đã học khi chưa đến hạn. Lần luyện này không làm thay đổi lịch ôn tập.
                         </p>
                     </div>
                 </label>

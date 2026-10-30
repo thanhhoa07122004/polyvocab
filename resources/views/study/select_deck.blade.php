@@ -17,7 +17,7 @@
                 Chọn bộ từ để học từ mới
             </h1>
             <p class="mt-1 text-sm text-slate-600">
-                Mỗi từ có thể có nhiều nét nghĩa riêng biệt. Hãy chọn một bộ từ có các nghĩa mới đang chờ bạn khám phá.
+                Chọn một bộ từ bạn muốn học hôm nay để bắt đầu phiên làm quen và củng cố từ mới.
             </p>
         </div>
         <a href="{{ route('decks.create') }}" class="inline-flex items-center rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-indigo-500 transition">
@@ -50,7 +50,7 @@
                                 @endif
                             </span>
                             <span class="rounded-full bg-slate-100 px-2 py-0.5 font-medium text-slate-600">
-                                {{ $deck->entries_count }} mục từ
+                                {{ $deck->entries_count }} từ
                             </span>
                         </div>
                         <h2 class="mt-2 text-base font-bold text-slate-900">
@@ -63,11 +63,11 @@
                         <div class="mt-3 flex items-center gap-2">
                             @if ($deck->unstudied_count > 0)
                                 <span class="inline-flex items-center rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-                                    {{ $deck->unstudied_count }} nghĩa mới khả dụng
+                                    {{ $deck->unstudied_count }} từ mới sẵn sàng
                                 </span>
                             @else
                                 <span class="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
-                                    0 nghĩa mới chưa học
+                                    Đã học hết từ mới
                                 </span>
                             @endif
                         </div>
@@ -75,12 +75,12 @@
 
                     <div class="mt-5 flex items-center justify-between pt-3 border-t border-slate-100">
                         <a href="{{ route('decks.show', $deck) }}" class="text-xs font-semibold text-slate-600 hover:text-slate-900 transition">
-                            Xem mục từ
+                            Xem từ vựng
                         </a>
                         @if ($deck->unstudied_count > 0)
                             <a href="{{ route('study.new.prepare', $deck) }}"
                                class="inline-flex items-center rounded-xl bg-indigo-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-2xs hover:bg-indigo-700 transition">
-                                Chuẩn bị học &rarr;
+                                Bắt đầu học &rarr;
                             </a>
                         @else
                             <a href="{{ route('decks.entries.create', $deck) }}"

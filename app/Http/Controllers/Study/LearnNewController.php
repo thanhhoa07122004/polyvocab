@@ -93,21 +93,18 @@ class LearnNewController extends Controller
 
         $validated = $request->validate([
             'count' => ['required', 'integer', "min:{$minBatch}", "max:{$maxBatch}"],
-            'exercise_types' => ['nullable', 'array'],
-            'exercise_types.*' => ['string'],
         ]);
 
         $session = $this->createSessionAction->execute(
             user: $user,
             deck: $deck,
-            requestedCount: (int) $validated['count'],
-            selectedExerciseTypes: $validated['exercise_types'] ?? []
+            requestedCount: (int) $validated['count']
         );
 
         if (! $session) {
             return redirect()
                 ->route('study.new.prepare', $deck)
-                ->with('error', 'Bộ từ này hiện không còn nghĩa mới nào chưa học.');
+                ->with('error', 'Bộ từ này hiện không còn từ nào chưa học.');
         }
 
         return redirect()->route('study.session.show', $session);

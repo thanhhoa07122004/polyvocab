@@ -1,9 +1,33 @@
+@php
+    $themeService = app(\App\Services\ThemeService::class);
+    $initialTheme = $themeService->resolveTheme(auth()->user());
+@endphp
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}"
+      data-theme="{{ $initialTheme->value }}"
+      style="color-scheme: {{ $initialTheme->colorScheme() }};">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', config('app.name'))</title>
+
+    {{-- Anti-FOUC (Flash of Unstyled Content): Áp dụng ngay theme từ localStorage trước khi render frame đầu --}}
+    <script>
+        (function () {
+            try {
+                var stored = localStorage.getItem('polyvocab_theme');
+                var validThemes = ['light', 'dark', 'rose_pastel', 'plum_dark', 'blue_light'];
+                if (stored && validThemes.indexOf(stored) !== -1) {
+                    var darkThemes = ['dark', 'plum_dark'];
+                    var scheme = darkThemes.indexOf(stored) !== -1 ? 'dark' : 'light';
+                    document.documentElement.setAttribute('data-theme', stored);
+                    document.documentElement.style.colorScheme = scheme;
+                }
+            } catch (e) {}
+        })();
+    </script>
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
@@ -49,6 +73,8 @@
             </div>
 
             <div class="flex items-center space-x-3">
+                <x-theme-switcher />
+
                 <a href="{{ route('explore') }}" class="sm:hidden text-xs font-medium text-slate-600 hover:text-indigo-600">
                     Khám phá
                 </a>
@@ -129,7 +155,129 @@
     </footer>
 
     <script>
+        // Quản lý chủ đề giao diện (Theme switcher & persistence)
+        window.toggleThemeMenu = function (e) {
+            if (e) e.stopPropagation();
+            const panel = document.getElementById('theme-menu-panel');
+            const btn = document.getElementById('theme-switcher-button');
+            if (!panel) return;
+            const isHidden = panel.classList.contains('hidden');
+            if (isHidden) {
+                panel.classList.remove('hidden');
+                btn?.setAttribute('aria-expanded', 'true');
+            } else {
+                panel.classList.add('hidden');
+                btn?.setAttribute('aria-expanded', 'false');
+            }
+        };
+
+        window.selectTheme = function (themeKey, colorScheme, label, swatchGradient) {
+            // 1. Áp dụng ngay tức thì trên DOM, không reload trang
+            document.documentElement.setAttribute('data-theme', themeKey);
+            document.documentElement.style.colorScheme = colorScheme;
+
+            // 2. Lưu vào localStorage
+            try {
+                localStorage.setItem('polyvocab_theme', themeKey);
+            } catch (e) {}
+
+            // 3. Lưu cookie 1 năm
+            document.cookie = 'polyvocab_theme=' + encodeURIComponent(themeKey) + '; path=/; max-age=' + (60 * 60 * 24 * 365) + '; SameSite=Lax';
+
+            // 4. Cập nhật nhãn, swatch và checkmark trên UI switcher
+            const activeLabel = document.getElementById('theme-active-label');
+            if (activeLabel && label) {
+                activeLabel.textContent = label;
+            }
+            const activeSwatch = document.getElementById('theme-active-swatch');
+            if (activeSwatch && swatchGradient) {
+                activeSwatch.style.background = swatchGradient;
+            }
+            document.querySelectorAll('.theme-check-indicator').forEach(function (el) {
+                if (el.getAttribute('data-theme-for') === themeKey) {
+                    el.classList.remove('hidden');
+                } else {
+                    el.classList.add('hidden');
+                }
+            });
+            document.querySelectorAll('.theme-option-btn').forEach(function (btn) {
+                if (btn.getAttribute('data-theme-key') === themeKey) {
+                    btn.classList.add('theme-option-active', 'font-semibold');
+                    btn.classList.remove('theme-option-inactive', 'font-medium');
+                } else {
+                    btn.classList.remove('theme-option-active', 'font-semibold');
+                    btn.classList.add('theme-option-inactive', 'font-medium');
+                }
+            });
+
+            // 5. Đóng dropdown
+            const panel = document.getElementById('theme-menu-panel');
+            if (panel) panel.classList.add('hidden');
+            document.getElementById('theme-switcher-button')?.setAttribute('aria-expanded', 'false');
+
+            // 6. Gửi API lưu vào tài khoản nếu đăng nhập (chạy ngầm, không làm phiền phiên học)
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            fetch('{{ route('settings.theme.update') }}', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken || ''
+                },
+                body: JSON.stringify({ theme: themeKey })
+            }).catch(function (err) {
+                // Thao tác offline/mất mạng vẫn dùng bình thường nhờ localStorage & cookie
+            });
+        };
+
+        // Đồng bộ nhãn nút theme từ localStorage khi load trang
         document.addEventListener('DOMContentLoaded', function () {
+            try {
+                var stored = localStorage.getItem('polyvocab_theme');
+                if (stored) {
+                    var optionBtn = document.querySelector('.theme-option-btn[data-theme-key="' + stored + '"]');
+                    if (optionBtn) {
+                        var label = optionBtn.getAttribute('data-label');
+                        var activeLabel = document.getElementById('theme-active-label');
+                        if (activeLabel && label) {
+                            activeLabel.textContent = label;
+                        }
+                        var grad = optionBtn.getAttribute('data-swatch-gradient');
+                        var activeSwatch = document.getElementById('theme-active-swatch');
+                        if (activeSwatch && grad) {
+                            activeSwatch.style.background = grad;
+                        }
+                        document.querySelectorAll('.theme-check-indicator').forEach(function (el) {
+                            if (el.getAttribute('data-theme-for') === stored) {
+                                el.classList.remove('hidden');
+                            } else {
+                                el.classList.add('hidden');
+                            }
+                        });
+                        document.querySelectorAll('.theme-option-btn').forEach(function (btn) {
+                            if (btn.getAttribute('data-theme-key') === stored) {
+                                btn.classList.add('theme-option-active', 'font-semibold');
+                                btn.classList.remove('theme-option-inactive', 'font-medium');
+                            } else {
+                                btn.classList.remove('theme-option-active', 'font-semibold');
+                                btn.classList.add('theme-option-inactive', 'font-medium');
+                            }
+                        });
+                    }
+                }
+            } catch (e) {}
+
+            // Đóng menu khi click bên ngoài
+            document.addEventListener('click', function (e) {
+                const container = document.getElementById('theme-switcher-container');
+                const panel = document.getElementById('theme-menu-panel');
+                if (container && panel && !container.contains(e.target)) {
+                    panel.classList.add('hidden');
+                    document.getElementById('theme-switcher-button')?.setAttribute('aria-expanded', 'false');
+                }
+            });
+
+            // Form double submission prevention
             document.querySelectorAll('form').forEach(function (form) {
                 form.addEventListener('submit', function () {
                     const btn = form.querySelector('button[type="submit"]');

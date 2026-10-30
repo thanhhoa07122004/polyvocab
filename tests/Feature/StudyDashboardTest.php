@@ -201,9 +201,9 @@ class StudyDashboardTest extends TestCase
         $response = $this->actingAs($user)->get(route('dashboard'));
 
         $response->assertOk();
-        $response->assertSee('Phiên chưa kết thúc');
+        $response->assertSee('BẠN ĐANG HỌC DỞ');
         $response->assertSee('TOEIC Essential');
-        $response->assertSee('Tiếp tục phiên học');
+        $response->assertSee('Tiếp tục học');
         $response->assertSee(route('study.session.show', $session));
     }
 }

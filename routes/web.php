@@ -13,10 +13,14 @@ use App\Http\Controllers\Study\PracticeController;
 use App\Http\Controllers\Study\QuizController;
 use App\Http\Controllers\Study\ReviewController;
 use App\Http\Controllers\Study\StudySessionController;
+use App\Http\Controllers\ThemeController;
 use App\Http\Controllers\VocabularyEntryController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'home')->name('home');
+
+// Cập nhật cài đặt chủ đề giao diện (hỗ trợ cả khách và thành viên đã đăng nhập)
+Route::patch('/settings/theme', [ThemeController::class, 'update'])->name('settings.theme.update');
 
 // Khám phá bộ từ công khai & xem chi tiết bộ từ, mục từ (cho khách và người đã đăng nhập)
 Route::get('/explore', ExploreController::class)->name('explore');
@@ -83,6 +87,9 @@ Route::middleware('auth')->group(function () {
         ->name('study.practice.deck')
         ->whereNumber('deck');
     Route::post('/study/practice/start', [PracticeController::class, 'start'])->name('study.practice.start');
+    Route::post('/study/practice/from-session/{session}', [PracticeController::class, 'startFromSession'])
+        ->name('study.practice.from_session')
+        ->whereNumber('session');
 
     // 4. Kiểm tra (Quiz / Test)
     Route::get('/study/quiz', [QuizController::class, 'index'])->name('study.quiz.index');

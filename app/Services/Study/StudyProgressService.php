@@ -125,7 +125,12 @@ class StudyProgressService
                 $q->where('deck_id', $deck->id);
             })
             ->whereDoesntHave('studyRecords', function (Builder $q) use ($user) {
-                $q->where('user_id', $user->id);
+                $q->where('user_id', $user->id)
+                    ->where(function (Builder $sq) {
+                        $sq->whereNotNull('familiarized_at')
+                            ->orWhereNotNull('last_studied_at')
+                            ->orWhere('repetition_level', '>', 0);
+                    });
             });
     }
 
@@ -144,7 +149,12 @@ class StudyProgressService
     {
         return EntryMeaning::query()
             ->whereHas('studyRecords', function (Builder $q) use ($user) {
-                $q->where('user_id', $user->id);
+                $q->where('user_id', $user->id)
+                    ->where(function (Builder $sq) {
+                        $sq->whereNotNull('familiarized_at')
+                            ->orWhereNotNull('last_studied_at')
+                            ->orWhere('repetition_level', '>', 0);
+                    });
             })
             ->when($deckIds, function (Builder $q) use ($deckIds) {
                 $q->whereHas('vocabularyEntry', fn ($vq) => $vq->whereIn('deck_id', $deckIds));
@@ -238,9 +248,9 @@ class StudyProgressService
                     });
             });
         } elseif ($scope === 'unstudied') {
-            $query->whereDoesntHave('studyRecords', fn (Builder $q) => $q->where('user_id', $user->id));
+            $query->whereDoesntHave('studyRecords', fn (Builder $q) => $q->where('user_id', $user->id)->whereNotNull('familiarized_at'));
         } elseif ($scope === 'studied') {
-            $query->whereHas('studyRecords', fn (Builder $q) => $q->where('user_id', $user->id));
+            $query->whereHas('studyRecords', fn (Builder $q) => $q->where('user_id', $user->id)->whereNotNull('familiarized_at'));
         } elseif ($scope === 'due') {
             $query->whereHas('studyRecords', function (Builder $q) use ($user) {
                 $q->where('user_id', $user->id)->where('due_at', '<=', now());

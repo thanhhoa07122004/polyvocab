@@ -1,33 +1,60 @@
 @extends('layouts.app')
 
-@section('title', 'Chuẩn bị học từ mới: ' . $deck->name . ' | ' . config('app.name'))
+@section('title', __('study.learn_new_title') . ': ' . $deck->name . ' | ' . config('app.name'))
 
 @section('content')
-<div class="mx-auto max-w-3xl space-y-8">
-    <!-- Điều hướng & Tiêu đề -->
+@php
+    // Lọc các mốc preset thực sự nhỏ hơn availableCount (mốc bằng availableCount đã là nút "Tất cả")
+    $applicablePresets = array_values(array_filter($presets, fn ($p) => $p < $availableCount));
+
+    // Giá trị khởi tạo mặc định cho số lượng
+    $initialCount = old('count', ($availableCount > 0 ? min($defaultCount, $availableCount) : 0));
+    
+    // Kiểm tra xem initialCount có trùng với preset hay "Tất cả"
+    $isPresetActive = in_array($initialCount, $applicablePresets, true);
+    $isAllActive = ($initialCount === $availableCount && $availableCount > 0);
+    $isCustomActive = (! $isPresetActive && ! $isAllActive && $availableCount > 0);
+@endphp
+
+<div class="mx-auto max-w-4xl space-y-6 sm:space-y-8">
+    {{-- 1. ĐẦU TRANG & KHỐI THÔNG TIN GỌN --}}
     <div>
-        <div class="flex items-center space-x-2 text-sm text-slate-500">
-            <a href="{{ route('dashboard') }}" class="hover:text-slate-800 transition">Bảng điều khiển</a>
+        {{-- Breadcrumb nhỏ gọn --}}
+        <nav aria-label="Breadcrumb" class="flex items-center space-x-2 text-xs text-slate-500 mb-2">
+            <a href="{{ route('dashboard') }}" class="hover:text-slate-900 transition">Bảng điều khiển</a>
             <span>/</span>
-            <a href="{{ route('decks.show', $deck) }}" class="hover:text-slate-800 transition">{{ $deck->name }}</a>
+            <a href="{{ route('decks.show', $deck) }}" class="hover:text-slate-900 transition truncate max-w-[200px] sm:max-w-xs">{{ $deck->name }}</a>
             <span>/</span>
-            <span class="font-semibold text-slate-800">Chuẩn bị học từ mới</span>
-        </div>
-        <div class="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <span class="font-semibold text-slate-800">{{ __('study.learn_new_title') }}</span>
+        </nav>
+
+        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div>
                 <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-                    Chuẩn bị học từ mới
+                    {{ __('study.learn_new_title') }}
                 </h1>
                 <p class="mt-1 text-sm text-slate-600">
-                    Làm quen và củng cố các nét nghĩa chưa học trong bộ từ <span class="font-semibold text-slate-800">"{{ $deck->name }}"</span>.
+                    {{ __('study.learn_new_desc', ['name' => $deck->name]) }}
                 </p>
             </div>
-            <div class="inline-flex items-center self-start rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
-                Đơn vị tiến độ: Từng nghĩa riêng biệt
+
+            {{-- Khối thông tin bộ từ thu gọn --}}
+            <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-xs">
+                <div class="inline-flex items-center space-x-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 shadow-2xs">
+                    <span class="text-slate-400 font-medium">{{ __('study.language') }}:</span>
+                    <span class="font-semibold text-slate-800">{{ $deck->learningLanguage->name }}</span>
+                    <span class="text-slate-300">&rarr;</span>
+                    <span class="font-semibold text-slate-800">{{ $deck->meaningLanguage->name }}</span>
+                </div>
+
+                <div class="inline-flex items-center space-x-1.5 rounded-xl border border-indigo-100 bg-indigo-50/70 px-3 py-1.5 text-indigo-800 shadow-2xs">
+                    <span class="font-bold">{{ __('study.unstudied_content', ['count' => $availableCount]) }}</span>
+                </div>
             </div>
         </div>
     </div>
 
+    {{-- Thông báo flash --}}
     @if (session('status'))
         <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
             {{ session('status') }}
@@ -40,246 +67,309 @@
         </div>
     @endif
 
-    <!-- Cảnh báo nếu đang có phiên học dở dang -->
+    {{-- Cảnh báo nếu đang có phiên dở dang --}}
     @if ($activeSession)
-        <div class="rounded-3xl border border-amber-300 bg-amber-50/80 p-6 shadow-xs">
-            <div class="flex items-start space-x-4">
-                <div class="rounded-2xl bg-amber-200/70 p-3 text-amber-800 shrink-0">
-                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+        <div class="rounded-2xl border border-amber-300 bg-amber-50/90 p-5 shadow-xs">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div class="flex items-start space-x-3">
+                    <div class="rounded-xl bg-amber-200/80 p-2 text-amber-800 shrink-0 mt-0.5">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="text-xs font-semibold text-amber-800 uppercase tracking-wide">
+                            {{ __('study.session_in_progress') }}
+                        </div>
+                        <h2 class="text-sm sm:text-base font-bold text-slate-900 mt-0.5">
+                            @if ($activeSession->completedItemsCount() > 0)
+                                {{ __('study.active_session_has_progress') }}
+                            @else
+                                {{ __('study.active_session_no_progress') }}
+                            @endif
+                        </h2>
+                        <div class="text-xs text-slate-600 mt-1 flex flex-wrap gap-x-3 gap-y-1">
+                            <span>Chế độ: <strong class="text-slate-800">{{ $activeSession->mode->label() }}</strong></span>
+                            <span>&bull;</span>
+                            <span>Đã học: <strong class="text-slate-800">{{ $activeSession->completedItemsCount() }}/{{ $activeSession->items->count() }} từ</strong></span>
+                            <span>&bull;</span>
+                            <span>Học gần nhất: {{ $activeSession->last_interacted_at ? $activeSession->last_interacted_at->diffForHumans() : 'Vừa xong' }}</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex-1">
-                    <span class="inline-flex items-center rounded-md bg-amber-200 px-2 py-0.5 text-xs font-bold text-amber-900">
-                        Phiên học đang diễn ra
-                    </span>
-                    <h2 class="mt-1 text-lg font-bold text-slate-900">
-                        Bạn có một phiên học chưa kết thúc cho bộ từ này
-                    </h2>
-                    <div class="mt-2 text-sm text-slate-700 space-y-1">
-                        <p>&bull; Chế độ: <span class="font-semibold">{{ $activeSession->mode->label() }}</span> (Giai đoạn {{ $activeSession->stage->label() }})</p>
-                        <p>&bull; Số mục đã xử lý: <span class="font-bold text-amber-900">{{ $activeSession->completedItemsCount() }}/{{ $activeSession->items->count() }} nghĩa</span></p>
-                        <p>&bull; Thời điểm tương tác gần nhất: <span class="font-medium">{{ $activeSession->last_interacted_at ? $activeSession->last_interacted_at->diffForHumans() : 'Vừa xong' }}</span></p>
-                    </div>
 
-                    <div class="mt-5 flex flex-wrap items-center gap-3">
-                        <a href="{{ route('study.session.show', $activeSession) }}"
-                           class="inline-flex items-center rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white shadow-2xs hover:bg-amber-700 transition">
-                            Tiếp tục phiên học &rarr;
-                        </a>
+                <div class="flex items-center gap-2 self-start sm:self-center shrink-0">
+                    <a href="{{ route('study.session.show', $activeSession) }}"
+                       class="inline-flex items-center rounded-xl bg-amber-600 px-4 py-2 text-xs font-bold text-white shadow-2xs hover:bg-amber-700 transition">
+                        {{ __('study.resume_session') }} &rarr;
+                    </a>
 
-                        <form method="POST" action="{{ route('study.session.abandon', $activeSession) }}"
-                              onsubmit="return confirm('Bạn có chắc chắn muốn kết thúc phiên học cũ? Những nghĩa bạn đã hoàn thành làm quen trước đó vẫn được lưu lại an toàn trong hệ thống.');">
-                            @csrf
-                            <button type="submit"
-                                    class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-2xs hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 transition cursor-pointer">
-                                Kết thúc phiên cũ để tạo phiên mới
-                            </button>
-                        </form>
-                    </div>
+                    <form method="POST" action="{{ route('study.session.abandon', $activeSession) }}"
+                          onsubmit="return confirm('{{ __('study.abandon_confirm') }}');">
+                        @csrf
+                        <button type="submit"
+                                class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 transition cursor-pointer">
+                            {{ __('study.abandon_session') }}
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
     @endif
 
-    <!-- Thông tin cấu hình bộ từ -->
-    <div class="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
-        <dl class="grid grid-cols-1 gap-6 sm:grid-cols-3 border-b border-slate-100 pb-6">
-            <div>
-                <dt class="text-xs font-medium text-slate-500">Bộ từ</dt>
-                <dd class="mt-1 text-base font-bold text-slate-900 truncate">{{ $deck->name }}</dd>
+    {{-- NỘI DUNG CHÍNH --}}
+    @if ($availableCount === 0)
+        {{-- Trạng thái rỗng: Đã học hết từ mới --}}
+        <div class="rounded-3xl border border-slate-200 bg-white p-8 text-center max-w-2xl mx-auto shadow-xs">
+            <div class="w-12 h-12 mx-auto rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl mb-3">
+                ✓
             </div>
-            <div>
-                <dt class="text-xs font-medium text-slate-500">Cặp ngôn ngữ</dt>
-                <dd class="mt-1 text-base font-semibold text-slate-900">
-                    {{ $deck->learningLanguage->name }}
-                    <span class="text-slate-400">&rarr;</span>
-                    {{ $deck->meaningLanguage->name }}
-                </dd>
-            </div>
-            <div>
-                <dt class="text-xs font-medium text-slate-500">Nghĩa mới khả dụng</dt>
-                <dd class="mt-1 text-base font-extrabold text-indigo-600">
-                    {{ $availableCount }} nghĩa chưa học
-                </dd>
-            </div>
-        </dl>
-
-        @if ($availableCount === 0)
-            <div class="mt-6 rounded-2xl bg-slate-50 p-6 text-center border border-slate-100">
-                <h3 class="text-base font-bold text-slate-800">Tuyệt vời! Bạn đã làm quen tất cả các nghĩa trong bộ từ này</h3>
-                <p class="mt-1 text-sm text-slate-500">
-                    Hãy thêm từ vựng mới hoặc chuyển sang chế độ <span class="font-semibold text-amber-700">Ôn tập</span> để củng cố các từ đã học.
-                </p>
-                <div class="mt-4 flex justify-center gap-3">
+            <h2 class="text-lg font-bold text-slate-900">
+                Bạn đã làm quen hết các từ trong bộ từ này
+            </h2>
+            <p class="mt-1 text-sm text-slate-500">
+                Hãy thêm từ vựng mới hoặc chuyển sang Luyện tập / Ôn tập để củng cố các từ đã học.
+            </p>
+            <div class="mt-6 flex flex-wrap justify-center gap-3">
+                @if ($deck->user_id === auth()->id())
                     <a href="{{ route('decks.entries.create', $deck) }}" class="inline-flex items-center rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 transition">
                         + Thêm từ vựng mới
                     </a>
-                    <a href="{{ route('dashboard') }}" class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition">
-                        Về bảng điều khiển
-                    </a>
+                @endif
+                <a href="{{ route('study.practice.deck', $deck) }}" class="inline-flex items-center rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold text-white shadow-xs hover:bg-purple-500 transition">
+                    Luyện tập bộ này
+                </a>
+                <a href="{{ route('study.review.index', ['deck_id' => $deck->id]) }}" class="inline-flex items-center rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white shadow-xs hover:bg-amber-500 transition">
+                    Đến trang Ôn tập
+                </a>
+                <a href="{{ route('decks.show', $deck) }}" class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition">
+                    {{ __('study.back_to_deck') }}
+                </a>
+            </div>
+        </div>
+    @else
+        <form method="POST" action="{{ route('study.new.start', $deck) }}" id="learnNewForm">
+            @csrf
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                {{-- CỘT TRÁI (7 cột): Chọn số lượng --}}
+                <div class="lg:col-span-7 space-y-6">
+                    <div class="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-xs space-y-4">
+                        <div>
+                            <h2 class="text-base font-bold text-slate-900">
+                                {{ __('study.how_many_today') }}
+                            </h2>
+                            <p class="text-xs text-slate-500 mt-0.5">
+                                {{ __('study.remaining_items', ['count' => $availableCount]) }}
+                            </p>
+                        </div>
+
+                        {{-- Nhóm nút chọn nhanh số lượng --}}
+                        <div class="flex flex-wrap items-center gap-2.5">
+                            @foreach ($applicablePresets as $preset)
+                                <button type="button"
+                                        class="count-preset-btn inline-flex items-center space-x-1.5 rounded-xl border px-3.5 py-2 text-xs font-semibold transition cursor-pointer {{ $initialCount === $preset ? 'border-indigo-600 bg-indigo-50/70 text-indigo-700 ring-2 ring-indigo-500/20' : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300 hover:bg-white' }}"
+                                        data-count="{{ $preset }}"
+                                        onclick="window.selectBatchCount({{ $preset }}, this)">
+                                    <span class="count-check {{ $initialCount === $preset ? '' : 'hidden' }}">✓</span>
+                                    <span>{{ __('study.item_unit_short', ['count' => $preset]) }}</span>
+                                </button>
+                            @endforeach
+
+                            {{-- Nút Tất cả --}}
+                            <button type="button"
+                                    class="count-preset-btn inline-flex items-center space-x-1.5 rounded-xl border px-3.5 py-2 text-xs font-semibold transition cursor-pointer {{ $isAllActive ? 'border-indigo-600 bg-indigo-50/70 text-indigo-700 ring-2 ring-indigo-500/20' : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300 hover:bg-white' }}"
+                                    data-count="{{ $availableCount }}"
+                                    onclick="window.selectBatchCount({{ $availableCount }}, this)">
+                                <span class="count-check {{ $isAllActive ? '' : 'hidden' }}">✓</span>
+                                <span>{{ __('study.all_items', ['count' => $availableCount]) }}</span>
+                            </button>
+
+                            {{-- Nút Tùy chỉnh --}}
+                            <button type="button"
+                                    id="btn-custom-count"
+                                    class="count-preset-btn inline-flex items-center space-x-1.5 rounded-xl border px-3.5 py-2 text-xs font-semibold transition cursor-pointer {{ $isCustomActive ? 'border-indigo-600 bg-indigo-50/70 text-indigo-700 ring-2 ring-indigo-500/20' : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300 hover:bg-white' }}"
+                                    onclick="window.activateCustomCount(this)">
+                                <span class="count-check {{ $isCustomActive ? '' : 'hidden' }}">✓</span>
+                                <span>{{ __('study.custom') }}</span>
+                            </button>
+                        </div>
+
+                        {{-- Ô nhập Tùy chỉnh (chỉ hiện khi bấm Tùy chỉnh) --}}
+                        <div id="custom-count-container" class="{{ $isCustomActive ? '' : 'hidden' }} pt-2 flex items-center space-x-3">
+                            <label for="countInput" class="text-xs text-slate-600 font-medium">Nhập số từ:</label>
+                            <div class="relative w-28">
+                                <input type="number"
+                                       id="countInput"
+                                       name="count"
+                                       value="{{ $initialCount }}"
+                                       min="{{ $minBatch }}"
+                                       max="{{ min($maxBatch, $availableCount) }}"
+                                       oninput="window.handleCustomInput(this)"
+                                       required
+                                       class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-center text-sm font-bold text-slate-900 shadow-2xs focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
+                            </div>
+                            <span class="text-xs text-slate-500">
+                                (từ {{ $minBatch }} đến {{ min($maxBatch, $availableCount) }} từ)
+                            </span>
+                        </div>
+
+                        @error('count')
+                            <p class="text-xs text-rose-600 font-medium">{{ $message }}</p>
+                        @enderror
+
+                        {{-- Dòng giải thích --}}
+                        <div class="pt-3 border-t border-slate-100 text-xs text-slate-500 flex items-start space-x-2">
+                            <span class="text-indigo-600 text-base leading-none">💡</span>
+                            <span>{{ __('study.familiarize_then_practice') }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- CỘT PHẢI (5 cột): Tóm tắt & Bắt đầu --}}
+                <div class="lg:col-span-5 space-y-4">
+                    <div class="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-xs space-y-4">
+                        <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider text-slate-400">
+                            {{ __('study.session_summary') }}
+                        </h2>
+
+                        <div class="space-y-3 text-xs">
+                            <div class="flex items-center justify-between">
+                                <span class="text-slate-500">Bộ từ:</span>
+                                <span class="font-bold text-slate-900 truncate max-w-[200px]">{{ $deck->name }}</span>
+                            </div>
+
+                            <div class="flex items-center justify-between">
+                                <span class="text-slate-500">{{ __('study.language') }}:</span>
+                                <span class="font-semibold text-slate-800">
+                                    {{ $deck->learningLanguage->name }} &rarr; {{ $deck->meaningLanguage->name }}
+                                </span>
+                            </div>
+
+                            <div class="flex items-center justify-between border-t border-slate-100 pt-2.5">
+                                <span class="text-slate-600 font-medium">Số từ làm quen:</span>
+                                <span class="font-extrabold text-indigo-700 text-sm" id="summary-count-display">
+                                    {{ __('study.item_unit_short', ['count' => $initialCount]) }}
+                                </span>
+                            </div>
+
+                            <div class="border-t border-slate-100 pt-2.5 text-[11px] text-slate-500 text-center font-medium bg-slate-50 rounded-xl py-2">
+                                {{ __('study.flow_steps') }}
+                            </div>
+                        </div>
+
+                        {{-- Nút bắt đầu học --}}
+                        <div class="pt-2 space-y-2">
+                            <button type="submit"
+                                    id="startSubmitBtn"
+                                    class="w-full flex items-center justify-center rounded-xl bg-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-indigo-500 transition focus:outline-none focus:ring-2 focus:ring-indigo-600/30 cursor-pointer">
+                                <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span id="startSubmitBtnText">
+                                    {{ __('study.start_learning_with_count', ['count' => $initialCount]) }}
+                                </span>
+                            </button>
+
+                            <p class="text-[11px] text-slate-400 text-center leading-tight">
+                                {{ __('study.progress_saved_note') }}
+                            </p>
+                        </div>
+
+                        <div class="border-t border-slate-100 pt-2 text-center">
+                            <a href="{{ route('decks.show', $deck) }}" class="text-xs font-medium text-slate-500 hover:text-slate-800 transition">
+                                &larr; {{ __('study.back_to_deck') }}
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
-        @else
-            <!-- Form thiết lập phiên học -->
-            <form method="POST" action="{{ route('study.new.start', $deck) }}" id="startStudyForm" class="mt-6 space-y-8">
-                @csrf
-
-                <!-- Khối 1: Số nghĩa muốn học -->
-                <div class="space-y-3">
-                    <div class="flex items-center justify-between">
-                        <label for="countInput" class="text-sm font-bold text-slate-900">
-                            1. Số lượng nghĩa muốn học trong phiên:
-                        </label>
-                        <span class="text-xs text-slate-500">
-                            Giới hạn: {{ $minBatch }} - {{ min($maxBatch, $availableCount) }} nghĩa
-                        </span>
-                    </div>
-
-                    <!-- Nút chọn nhanh -->
-                    <div class="flex flex-wrap items-center gap-3">
-                        @foreach ($presets as $preset)
-                            @if ($preset <= $availableCount)
-                                <button type="button"
-                                        onclick="setBatchCount({{ $preset }})"
-                                        class="preset-btn inline-flex items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-200 cursor-pointer">
-                                    {{ $preset }} nghĩa
-                                </button>
-                            @endif
-                        @endforeach
-                    </div>
-
-                    <!-- Ô nhập tùy chỉnh -->
-                    <div class="mt-2 flex items-center space-x-3">
-                        <div class="relative w-36">
-                            <input type="number"
-                                   id="countInput"
-                                   name="count"
-                                   value="{{ old('count', $defaultCount) }}"
-                                   min="{{ $minBatch }}"
-                                   max="{{ min($maxBatch, $availableCount) }}"
-                                   oninput="checkAvailableNotice()"
-                                   required
-                                   class="block w-full rounded-xl border border-slate-300 px-3 py-2 text-center text-sm font-bold text-slate-900 shadow-2xs focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
-                        </div>
-                        <span class="text-sm text-slate-600">nghĩa</span>
-                    </div>
-
-                    @error('count')
-                        <p class="text-xs text-rose-600">{{ $message }}</p>
-                    @enderror
-
-                    <!-- Thông báo chia nhóm nhỏ (Chunking) -->
-                    <div class="rounded-2xl bg-indigo-50/70 p-4 border border-indigo-100 flex items-start space-x-3">
-                        <span class="text-indigo-600 text-base">💡</span>
-                        <div class="text-xs text-indigo-900 leading-relaxed">
-                            <span class="font-bold">Phương pháp học hiệu quả:</span>
-                            <span class="font-semibold">Chia thành nhóm nhỏ để làm quen rồi luyện nhớ</span>
-                            (mặc định mỗi nhóm 5 nghĩa). Bạn sẽ hiểu kỹ từng từ trước khi chuyển sang nhóm kế tiếp.
-                        </div>
-                    </div>
-
-                    <!-- Cảnh báo nếu số lượng yêu cầu lớn hơn khả dụng thực tế -->
-                    <div id="lessAvailableAlert" class="hidden rounded-2xl bg-amber-50 p-4 border border-amber-200 text-xs text-amber-900">
-                        Số nghĩa thực tế khả dụng trong bộ từ là <span class="font-bold">{{ $availableCount }}</span> nghĩa. Hệ thống sẽ học tối đa số lượng này.
-                    </div>
-                </div>
-
-                <!-- Khối 2: Danh sách 8 dạng bài học -->
-                <div class="space-y-4 pt-6 border-t border-slate-100">
-                    <div>
-                        <h2 class="text-sm font-bold text-slate-900">
-                            2. Các dạng bài sẽ xuất hiện khi luyện nhớ:
-                        </h2>
-                        <p class="mt-1 text-xs text-slate-500">
-                            Tái sử dụng các dạng câu hỏi phong phú. Dạng bài thiếu dữ liệu (ví dụ câu ví dụ hoặc âm thanh) sẽ tự động tạm vô hiệu hóa.
-                        </p>
-                    </div>
-
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        @foreach ($exercises as $key => $ex)
-                            <div class="relative flex flex-col justify-between rounded-2xl border p-4 transition {{ $ex['is_eligible'] ? 'border-slate-200 bg-white hover:border-indigo-200' : 'border-slate-200/60 bg-slate-50/70 opacity-60' }}">
-                                <div>
-                                    <div class="flex items-start justify-between gap-2">
-                                        <h3 class="text-sm font-bold {{ $ex['is_eligible'] ? 'text-slate-900' : 'text-slate-500' }}">
-                                            {{ $ex['name'] }}
-                                        </h3>
-                                        @if ($ex['is_eligible'])
-                                            <span class="inline-flex items-center rounded-md bg-emerald-50 px-2 py-0.5 text-2xs font-semibold text-emerald-700 shrink-0">
-                                                ✓ Sẵn sàng
-                                            </span>
-                                        @else
-                                            <span class="inline-flex items-center rounded-md bg-slate-200 px-2 py-0.5 text-2xs font-semibold text-slate-600 shrink-0">
-                                                Tạm khóa
-                                            </span>
-                                        @endif
-                                    </div>
-                                    <p class="mt-1 text-xs text-slate-600">
-                                        {{ $ex['description'] }}
-                                    </p>
-                                    <div class="mt-2 rounded-lg bg-slate-50 p-2 text-2xs font-mono text-slate-600 border border-slate-100">
-                                        Ví dụ: {{ $ex['example'] }}
-                                    </div>
-                                </div>
-
-                                <div class="mt-3 pt-2 border-t border-slate-100 text-2xs">
-                                    @if ($ex['is_eligible'])
-                                        <span class="text-slate-500">
-                                            Đáp ứng điều kiện: <span class="font-semibold text-indigo-600">{{ $ex['eligible_count'] }} nghĩa</span>
-                                        </span>
-                                    @else
-                                        <span class="text-amber-700 font-medium">
-                                            ⚠️ {{ $ex['disabled_reason'] }}
-                                        </span>
-                                    @endif
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-
-                <!-- Nút Bắt đầu học -->
-                <div class="pt-6 border-t border-slate-100 flex items-center justify-between">
-                    <a href="{{ route('decks.show', $deck) }}" class="text-sm font-medium text-slate-600 hover:text-slate-900 transition">
-                        &larr; Quay lại bộ từ
-                    </a>
-
-                    <button type="submit"
-                            id="startSubmitBtn"
-                            class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-sm hover:bg-indigo-500 transition focus:outline-none focus:ring-2 focus:ring-indigo-600/20 cursor-pointer">
-                        <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Bắt đầu học ngay &rarr;
-                    </button>
-                </div>
-            </form>
-        @endif
-    </div>
+        </form>
+    @endif
 </div>
 
+{{-- SCRIPT ĐIỀU KHIỂN TƯƠNG TÁC --}}
 <script>
     const availableCount = {{ (int) $availableCount }};
+    const minBatch = {{ (int) $minBatch }};
+    const maxBatch = {{ (int) min($maxBatch, $availableCount) }};
 
-    function setBatchCount(val) {
+    window.selectBatchCount = function(val, btnEl) {
+        val = Math.max(minBatch, Math.min(val, availableCount));
+        
         const input = document.getElementById('countInput');
         if (input) {
-            input.value = Math.min(val, availableCount);
-            checkAvailableNotice();
+            input.value = val;
         }
-    }
 
-    function checkAvailableNotice() {
+        const customContainer = document.getElementById('custom-count-container');
+        if (customContainer) {
+            customContainer.classList.add('hidden');
+        }
+
+        document.querySelectorAll('.count-preset-btn').forEach(b => {
+            b.classList.remove('border-indigo-600', 'bg-indigo-50/70', 'text-indigo-700', 'ring-2', 'ring-indigo-500/20');
+            b.classList.add('border-slate-200', 'bg-slate-50', 'text-slate-700');
+            const check = b.querySelector('.count-check');
+            if (check) check.classList.add('hidden');
+        });
+
+        if (btnEl) {
+            btnEl.classList.remove('border-slate-200', 'bg-slate-50', 'text-slate-700');
+            btnEl.classList.add('border-indigo-600', 'bg-indigo-50/70', 'text-indigo-700', 'ring-2', 'ring-indigo-500/20');
+            const check = btnEl.querySelector('.count-check');
+            if (check) check.classList.remove('hidden');
+        }
+
+        updateSummaryUI(val);
+    };
+
+    window.activateCustomCount = function(btnEl) {
+        const customContainer = document.getElementById('custom-count-container');
+        if (customContainer) {
+            customContainer.classList.remove('hidden');
+        }
+
+        document.querySelectorAll('.count-preset-btn').forEach(b => {
+            b.classList.remove('border-indigo-600', 'bg-indigo-50/70', 'text-indigo-700', 'ring-2', 'ring-indigo-500/20');
+            b.classList.add('border-slate-200', 'bg-slate-50', 'text-slate-700');
+            const check = b.querySelector('.count-check');
+            if (check) check.classList.add('hidden');
+        });
+
+        if (btnEl) {
+            btnEl.classList.remove('border-slate-200', 'bg-slate-50', 'text-slate-700');
+            btnEl.classList.add('border-indigo-600', 'bg-indigo-50/70', 'text-indigo-700', 'ring-2', 'ring-indigo-500/20');
+            const check = btnEl.querySelector('.count-check');
+            if (check) check.classList.remove('hidden');
+        }
+
         const input = document.getElementById('countInput');
-        const alert = document.getElementById('lessAvailableAlert');
-        if (input && alert) {
-            const val = parseInt(input.value, 10);
-            if (val > availableCount) {
-                alert.classList.remove('hidden');
-            } else {
-                alert.classList.add('hidden');
-            }
+        if (input) {
+            input.focus();
+            input.select();
+            updateSummaryUI(parseInt(input.value) || minBatch);
+        }
+    };
+
+    window.handleCustomInput = function(inputEl) {
+        let val = parseInt(inputEl.value);
+        if (isNaN(val)) val = minBatch;
+        if (val > maxBatch) val = maxBatch;
+        if (val < minBatch && inputEl.value !== '') val = minBatch;
+        updateSummaryUI(val);
+    };
+
+    function updateSummaryUI(count) {
+        const summaryCount = document.getElementById('summary-count-display');
+        if (summaryCount) {
+            summaryCount.textContent = count + ' từ';
+        }
+
+        const startSubmitBtnText = document.getElementById('startSubmitBtnText');
+        if (startSubmitBtnText) {
+            startSubmitBtnText.textContent = 'Bắt đầu làm quen · ' + count + ' từ';
         }
     }
 </script>

@@ -39,8 +39,6 @@ class CreateLearnNewSessionAction
         $maxBatch = (int) config('polyvocab.study.max_batch_size', 50);
         $count = max($minBatch, min($maxBatch, $requestedCount));
 
-        $chunkSize = (int) config('polyvocab.study.chunk_size', 5);
-
         // Lấy danh sách nghĩa chưa học
         $unstudiedMeanings = $this->progressService->getUnstudiedMeaningsQuery($user, $deck)
             ->with(['vocabularyEntry', 'examples'])
@@ -51,7 +49,9 @@ class CreateLearnNewSessionAction
             return null;
         }
 
-        return DB::transaction(function () use ($user, $deck, $unstudiedMeanings, $chunkSize, $selectedExerciseTypes) {
+        $chunkSize = $unstudiedMeanings->count();
+
+        return DB::transaction(function () use ($user, $deck, $unstudiedMeanings, $chunkSize) {
             $session = StudySession::create([
                 'user_id' => $user->id,
                 'deck_id' => $deck->id,
@@ -61,7 +61,6 @@ class CreateLearnNewSessionAction
                 'chunk_size' => $chunkSize,
                 'current_chunk' => 0,
                 'settings' => [
-                    'exercise_types' => $selectedExerciseTypes,
                     'total_target' => $unstudiedMeanings->count(),
                 ],
                 'last_interacted_at' => now(),
@@ -72,7 +71,7 @@ class CreateLearnNewSessionAction
                     'study_session_id' => $session->id,
                     'entry_meaning_id' => $meaning->id,
                     'sort_order' => $index,
-                    'chunk_index' => (int) floor($index / $chunkSize),
+                    'chunk_index' => 0,
                     'stage' => StudyStage::Familiarization,
                 ]);
             }

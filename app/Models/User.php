@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\Theme;
 use App\Enums\UserRole;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -22,6 +23,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'theme',
     ];
 
     /**
@@ -45,6 +47,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'role' => UserRole::class,
+            'theme' => Theme::class,
         ];
     }
 
@@ -54,6 +57,22 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === UserRole::ADMIN;
+    }
+
+    /**
+     * Lấy theme hiện tại của người dùng (fallback về light).
+     */
+    public function resolvedTheme(): string
+    {
+        return $this->theme?->value ?? Theme::LIGHT->value;
+    }
+
+    /**
+     * Lấy color-scheme hiện tại của theme (light hoặc dark).
+     */
+    public function resolvedColorScheme(): string
+    {
+        return $this->theme?->colorScheme() ?? Theme::LIGHT->colorScheme();
     }
 
     /**

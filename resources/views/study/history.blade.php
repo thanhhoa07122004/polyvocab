@@ -15,7 +15,7 @@
                 Lịch sử học tập & kiểm tra
             </h1>
             <p class="mt-1 text-sm text-slate-600">
-                Theo dõi toàn bộ hành trình các phiên học từ mới, ôn tập định kỳ và kết quả kiểm tra kiến thức của bạn.
+                Theo dõi toàn bộ hành trình các bài học từ mới, ôn tập định kỳ và kết quả kiểm tra kiến thức của bạn.
             </p>
         </div>
 
@@ -30,7 +30,7 @@
         <div class="flex flex-wrap items-center gap-1.5">
             <a href="{{ route('study.history.index', ['timeframe' => $currentTimeframe]) }}"
                class="rounded-xl px-3 py-1.5 text-xs font-semibold transition {{ empty($currentMode) ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-100' }}">
-                Tất cả các phiên
+                Tất cả bài học
             </a>
             <a href="{{ route('study.history.index', ['mode' => 'learn_new', 'timeframe' => $currentTimeframe]) }}"
                class="rounded-xl px-3 py-1.5 text-xs font-semibold transition {{ $currentMode === 'learn_new' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-100' }}">
@@ -64,7 +64,7 @@
         </div>
     </div>
 
-    <!-- Danh sách các phiên học tập -->
+    <!-- Danh sách các bài học -->
     @if ($sessions->isEmpty())
         <div class="rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center shadow-xs">
             <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
@@ -73,7 +73,7 @@
                 </svg>
             </div>
             <h3 class="mt-3 text-base font-bold text-slate-900">Chưa có lịch sử học tập phù hợp</h3>
-            <p class="mt-1 text-xs text-slate-500">Các phiên học từ mới, ôn tập hoặc làm bài kiểm tra sẽ được lưu lại tại đây.</p>
+            <p class="mt-1 text-xs text-slate-500">Các bài học từ mới, ôn tập hoặc làm bài kiểm tra sẽ được lưu lại tại đây.</p>
             <div class="mt-4">
                 <a href="{{ route('dashboard') }}" class="inline-flex items-center rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-2xs hover:bg-indigo-500 transition">
                     Về bảng điều khiển &rarr;

@@ -27,6 +27,9 @@ class StudySessionItem extends Model
         'is_difficult',
         'is_self_declared_known',
         'practice_result',
+        'first_attempt_result',
+        'attempts_count',
+        'used_hint',
     ];
 
     /**
@@ -44,6 +47,8 @@ class StudySessionItem extends Model
             'practiced_at' => 'datetime',
             'is_difficult' => 'boolean',
             'is_self_declared_known' => 'boolean',
+            'attempts_count' => 'integer',
+            'used_hint' => 'boolean',
         ];
     }
 

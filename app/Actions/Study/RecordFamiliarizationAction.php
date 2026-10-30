@@ -36,6 +36,7 @@ class RecordFamiliarizationAction
             ]);
 
             $record->deck_id = $session->deck_id;
+            $record->familiarized_at = $record->familiarized_at ?: now();
             $record->is_difficult = $isDifficult;
             $record->is_self_declared_known = $isSelfDeclaredKnown;
             $record->last_studied_at = now();
@@ -57,21 +58,18 @@ class RecordFamiliarizationAction
 
             $record->save();
 
-            // Kiểm tra xem toàn bộ các mục trong nhóm hiện tại (chunk) đã làm quen xong chưa
-            $currentChunkItems = $session->items()
-                ->where('chunk_index', $session->current_chunk)
-                ->get();
+            // Kiểm tra xem toàn bộ các mục trong phiên đã làm quen xong chưa
+            $allItems = $session->items()->get();
+            $allFamiliarized = $allItems->every(fn ($it) => $it->familiarized_at !== null);
 
-            $allChunkFamiliarized = $currentChunkItems->every(fn ($it) => $it->familiarized_at !== null);
-
-            $transitionedToPractice = false;
-            if ($allChunkFamiliarized) {
-                // Chuyển sang giai đoạn Luyện nhớ cho nhóm này
+            $sessionCompleted = false;
+            if ($allFamiliarized) {
+                // Hoàn thành phiên làm quen từ mới
                 $session->update([
-                    'stage' => StudyStage::RetentionPractice,
+                    'status' => \App\Enums\StudySessionStatus::Completed,
                     'last_interacted_at' => now(),
                 ]);
-                $transitionedToPractice = true;
+                $sessionCompleted = true;
             } else {
                 $session->update([
                     'last_interacted_at' => now(),
@@ -81,8 +79,7 @@ class RecordFamiliarizationAction
             return [
                 'item_id' => $item->id,
                 'familiarized_at' => $item->familiarized_at,
-                'transitioned_to_practice' => $transitionedToPractice,
-                'current_chunk' => $session->current_chunk,
+                'session_completed' => $sessionCompleted,
                 'session_stage' => $session->stage->value,
             ];
         });

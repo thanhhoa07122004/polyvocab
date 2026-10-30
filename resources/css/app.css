@@ -10,3 +10,1027 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+/* ==========================================================================
+   POLYVOCAB THEME SYSTEM (5 CHỦ ĐỀ GIAO DIỆN ĐỒNG BỘ TOÀN DIỆN)
+   1. light        - Trắng tinh gọn (Mặc định)
+   2. dark         - Tối dịu mắt (#12161C, sâu lắng, hài hòa, không xám đục)
+   3. rose_pastel  - Hồng pastel ấm áp, thanh lịch
+   4. plum_dark    - Tím pastel tối (#1E1926, tím mận trầm êm dịu, không gắt)
+   5. blue_light   - Xanh dương nhạt băng thanh thoát
+   ========================================================================== */
+
+:root,
+[data-theme="light"] {
+    color-scheme: light;
+    --theme-bg-page: #FFFFFF;
+    --theme-bg-surface: #FFFFFF;
+    --theme-bg-card: #F8FAFC;
+    --theme-bg-card-subtle: #F1F5F9;
+    --theme-bg-popover: #FFFFFF;
+    --theme-bg-hover: #F1F5F9;
+    --theme-bg-selected: #EEF2FF;
+    --theme-bg-disabled: #F8FAFC;
+    --theme-bg-muted: #F1F5F9;
+    --theme-bg-overlay: rgba(15, 23, 42, 0.4);
+
+    --theme-text-main: #0F172A;
+    --theme-text-muted: #475569;
+    --theme-text-subtle: #64748B;
+    --theme-text-disabled: #94A3B8;
+    --theme-text-inverse: #FFFFFF;
+
+    --theme-border: #E2E8F0;
+    --theme-border-strong: #CBD5E1;
+    --theme-border-subtle: #F1F5F9;
+    --theme-border-selected: #6366F1;
+
+    --theme-primary: #4338CA;
+    --theme-primary-hover: #3730A3;
+    --theme-primary-fg: #FFFFFF;
+    --theme-primary-subtle: #EEF2FF;
+    --theme-primary-subtle-border: #C7D2FE;
+    --theme-primary-subtle-text: #3730A3;
+
+    --theme-input-bg: #FFFFFF;
+    --theme-input-border: #CBD5E1;
+    --theme-input-text: #0F172A;
+    --theme-input-placeholder: #94A3B8;
+    --theme-focus-ring: rgba(67, 56, 202, 0.25);
+
+    --theme-btn-sec-bg: #FFFFFF;
+    --theme-btn-sec-border: #CBD5E1;
+    --theme-btn-sec-text: #334155;
+    --theme-btn-sec-hover: #F8FAFC;
+
+    --theme-card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+
+    /* Feedback tokens */
+    --theme-success-bg: #ECFDF5;
+    --theme-success-border: #A7F3D0;
+    --theme-success-text: #065F46;
+    --theme-success-btn-bg: #059669;
+    --theme-success-btn-hover: #047857;
+
+    --theme-danger-bg: #FFF1F2;
+    --theme-danger-border: #FECDD3;
+    --theme-danger-text: #9F1239;
+    --theme-danger-btn-bg: #E11D48;
+    --theme-danger-btn-hover: #BE123C;
+
+    --theme-warning-bg: #FFFBEB;
+    --theme-warning-border: #FDE68A;
+    --theme-warning-text: #92400E;
+
+    --theme-info-bg: #F0F9FF;
+    --theme-info-border: #BAE6FD;
+    --theme-info-text: #075985;
+
+    /* Study / Exercise tokens */
+    --theme-study-accent: #7C3AED;
+    --theme-study-accent-subtle: #F5F3FF;
+    --theme-study-accent-border: #DDD6FE;
+    --theme-study-accent-text: #6D28D9;
+}
+
+[data-theme="dark"] {
+    color-scheme: dark;
+    --theme-bg-page: #11161D;
+    --theme-bg-surface: #171D26;
+    --theme-bg-card: #1B222C;
+    --theme-bg-card-subtle: #232B38;
+    --theme-bg-popover: #1E2633;
+    --theme-bg-hover: #283344;
+    --theme-bg-selected: #2A3A54;
+    --theme-bg-disabled: #141922;
+    --theme-bg-muted: #1E2633;
+    --theme-bg-overlay: rgba(0, 0, 0, 0.75);
+
+    --theme-text-main: #E6EDF3;
+    --theme-text-muted: #9DA7B5;
+    --theme-text-subtle: #798495;
+    --theme-text-disabled: #546072;
+    --theme-text-inverse: #11161D;
+
+    --theme-border: #2B3544;
+    --theme-border-strong: #3D4A5C;
+    --theme-border-subtle: rgba(255, 255, 255, 0.08);
+    --theme-border-selected: #818CF8;
+
+    --theme-primary: #818CF8;
+    --theme-primary-hover: #9FA8F9;
+    --theme-primary-fg: #11161D;
+    --theme-primary-subtle: #20283E;
+    --theme-primary-subtle-border: #3D4D77;
+    --theme-primary-subtle-text: #D6DEFC;
+
+    --theme-input-bg: #141922;
+    --theme-input-border: #3D4A5C;
+    --theme-input-text: #E6EDF3;
+    --theme-input-placeholder: #68768A;
+    --theme-focus-ring: rgba(129, 140, 248, 0.35);
+
+    --theme-btn-sec-bg: #232B38;
+    --theme-btn-sec-border: #333F4F;
+    --theme-btn-sec-text: #E6EDF3;
+    --theme-btn-sec-hover: #2A3444;
+
+    --theme-card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+
+    /* Feedback tokens - êm dịu, tương phản cao trên nền tối */
+    --theme-success-bg: rgba(16, 185, 129, 0.14);
+    --theme-success-border: rgba(52, 211, 153, 0.3);
+    --theme-success-text: #6EE7B7;
+    --theme-success-btn-bg: #10B981;
+    --theme-success-btn-hover: #059669;
+
+    --theme-danger-bg: rgba(244, 63, 94, 0.14);
+    --theme-danger-border: rgba(251, 113, 133, 0.3);
+    --theme-danger-text: #FDA4AF;
+    --theme-danger-btn-bg: #E11D48;
+    --theme-danger-btn-hover: #BE123C;
+
+    --theme-warning-bg: rgba(245, 158, 11, 0.14);
+    --theme-warning-border: rgba(251, 191, 36, 0.3);
+    --theme-warning-text: #FCD34D;
+
+    --theme-info-bg: rgba(14, 165, 233, 0.14);
+    --theme-info-border: rgba(56, 189, 248, 0.3);
+    --theme-info-text: #7DD3FC;
+
+    /* Study / Exercise tokens */
+    --theme-study-accent: #818CF8;
+    --theme-study-accent-subtle: #20283E;
+    --theme-study-accent-border: #3D4D77;
+    --theme-study-accent-text: #D6DEFC;
+}
+
+[data-theme="rose_pastel"] {
+    color-scheme: light;
+    --theme-bg-page: #FFF1F5;
+    --theme-bg-surface: #FFFFFF;
+    --theme-bg-card: #FFFFFF;
+    --theme-bg-card-subtle: #FFF6F8;
+    --theme-bg-popover: #FFFFFF;
+    --theme-bg-hover: #FFF1F5;
+    --theme-bg-selected: #FFF0F5;
+    --theme-bg-disabled: #FFF6F8;
+    --theme-bg-muted: #FFE4EC;
+    --theme-bg-overlay: rgba(74, 37, 53, 0.45);
+
+    --theme-text-main: #4A2535;
+    --theme-text-muted: #73485B;
+    --theme-text-subtle: #91667A;
+    --theme-text-disabled: #B892A2;
+    --theme-text-inverse: #FFFFFF;
+
+    --theme-border: #FCE7F0;
+    --theme-border-strong: #F4C7D7;
+    --theme-border-subtle: #FFF1F5;
+    --theme-border-selected: #A82D60;
+
+    --theme-primary: #A82D60;
+    --theme-primary-hover: #8D224F;
+    --theme-primary-fg: #FFFFFF;
+    --theme-primary-subtle: #FFF0F5;
+    --theme-primary-subtle-border: #FBCFE8;
+    --theme-primary-subtle-text: #9D174D;
+
+    --theme-input-bg: #FFFFFF;
+    --theme-input-border: #F4C7D7;
+    --theme-input-text: #4A2535;
+    --theme-input-placeholder: #B892A2;
+    --theme-focus-ring: rgba(168, 45, 96, 0.25);
+
+    --theme-btn-sec-bg: #FFFFFF;
+    --theme-btn-sec-border: #F4C7D7;
+    --theme-btn-sec-text: #602940;
+    --theme-btn-sec-hover: #FFF1F5;
+
+    --theme-card-shadow: 0 1px 3px 0 rgba(168, 45, 96, 0.06);
+
+    /* Feedback tokens */
+    --theme-success-bg: #ECFDF5;
+    --theme-success-border: #A7F3D0;
+    --theme-success-text: #065F46;
+    --theme-success-btn-bg: #059669;
+    --theme-success-btn-hover: #047857;
+
+    --theme-danger-bg: #FFF1F2;
+    --theme-danger-border: #FECDD3;
+    --theme-danger-text: #9F1239;
+    --theme-danger-btn-bg: #A82D60;
+    --theme-danger-btn-hover: #8D224F;
+
+    --theme-warning-bg: #FFFBEB;
+    --theme-warning-border: #FDE68A;
+    --theme-warning-text: #92400E;
+
+    --theme-info-bg: #FDF2F8;
+    --theme-info-border: #FBCFE8;
+    --theme-info-text: #831843;
+
+    /* Study / Exercise tokens */
+    --theme-study-accent: #A82D60;
+    --theme-study-accent-subtle: #FFF0F5;
+    --theme-study-accent-border: #FBCFE8;
+    --theme-study-accent-text: #831843;
+}
+
+[data-theme="plum_dark"] {
+    color-scheme: dark;
+    --theme-bg-page: #181322;
+    --theme-bg-surface: #211B2E;
+    --theme-bg-card: #251E34;
+    --theme-bg-card-subtle: #2F2642;
+    --theme-bg-popover: #2A223B;
+    --theme-bg-hover: #382C4F;
+    --theme-bg-selected: #42325E;
+    --theme-bg-disabled: #1A1525;
+    --theme-bg-muted: #2A223B;
+    --theme-bg-overlay: rgba(12, 9, 18, 0.8);
+
+    --theme-text-main: #F3EEF9;
+    --theme-text-muted: #C5B7D7;
+    --theme-text-subtle: #9787AC;
+    --theme-text-disabled: #6A5B7F;
+    --theme-text-inverse: #181322;
+
+    --theme-border: #3E3152;
+    --theme-border-strong: #54436E;
+    --theme-border-subtle: rgba(243, 238, 249, 0.08);
+    --theme-border-selected: #C4A7EC;
+
+    --theme-primary: #C4A7EC;
+    --theme-primary-hover: #D6BEF7;
+    --theme-primary-fg: #181322;
+    --theme-primary-subtle: #35274A;
+    --theme-primary-subtle-border: #5B437D;
+    --theme-primary-subtle-text: #EFE4FB;
+
+    --theme-input-bg: #1A1525;
+    --theme-input-border: #54436E;
+    --theme-input-text: #F3EEF9;
+    --theme-input-placeholder: #7B6B92;
+    --theme-focus-ring: rgba(196, 167, 236, 0.35);
+
+    --theme-btn-sec-bg: #2F2642;
+    --theme-btn-sec-border: #3E3152;
+    --theme-btn-sec-text: #F3EEF9;
+    --theme-btn-sec-hover: #382C4F;
+
+    --theme-card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.45);
+
+    /* Feedback tokens - sắc thái mận tím hài hòa */
+    --theme-success-bg: rgba(16, 185, 129, 0.14);
+    --theme-success-border: rgba(52, 211, 153, 0.3);
+    --theme-success-text: #6EE7B7;
+    --theme-success-btn-bg: #10B981;
+    --theme-success-btn-hover: #059669;
+
+    --theme-danger-bg: rgba(244, 63, 94, 0.14);
+    --theme-danger-border: rgba(251, 113, 133, 0.3);
+    --theme-danger-text: #FDA4AF;
+    --theme-danger-btn-bg: #F43F5E;
+    --theme-danger-btn-hover: #E11D48;
+
+    --theme-warning-bg: rgba(245, 158, 11, 0.14);
+    --theme-warning-border: rgba(251, 191, 36, 0.3);
+    --theme-warning-text: #FCD34D;
+
+    --theme-info-bg: rgba(196, 167, 236, 0.14);
+    --theme-info-border: rgba(196, 167, 236, 0.32);
+    --theme-info-text: #DDC7F7;
+
+    /* Study / Exercise tokens */
+    --theme-study-accent: #C4A7EC;
+    --theme-study-accent-subtle: #35274A;
+    --theme-study-accent-border: #5B437D;
+    --theme-study-accent-text: #EFE4FB;
+}
+
+[data-theme="blue_light"] {
+    color-scheme: light;
+    --theme-bg-page: #EFF6FF;
+    --theme-bg-surface: #FFFFFF;
+    --theme-bg-card: #FFFFFF;
+    --theme-bg-card-subtle: #F5F9FF;
+    --theme-bg-popover: #FFFFFF;
+    --theme-bg-hover: #EFF6FF;
+    --theme-bg-selected: #EFF6FF;
+    --theme-bg-disabled: #F5F9FF;
+    --theme-bg-muted: #DBEAFE;
+    --theme-bg-overlay: rgba(24, 50, 79, 0.45);
+
+    --theme-text-main: #18324F;
+    --theme-text-muted: #3A5576;
+    --theme-text-subtle: #5C789B;
+    --theme-text-disabled: #829BB9;
+    --theme-text-inverse: #FFFFFF;
+
+    --theme-border: #DBEAFE;
+    --theme-border-strong: #BFDBFE;
+    --theme-border-subtle: #EFF6FF;
+    --theme-border-selected: #1D4ED8;
+
+    --theme-primary: #1D4ED8;
+    --theme-primary-hover: #1E40AF;
+    --theme-primary-fg: #FFFFFF;
+    --theme-primary-subtle: #EFF6FF;
+    --theme-primary-subtle-border: #93C5FD;
+    --theme-primary-subtle-text: #1E40AF;
+
+    --theme-input-bg: #FFFFFF;
+    --theme-input-border: #BFDBFE;
+    --theme-input-text: #18324F;
+    --theme-input-placeholder: #829BB9;
+    --theme-focus-ring: rgba(29, 78, 216, 0.25);
+
+    --theme-btn-sec-bg: #FFFFFF;
+    --theme-btn-sec-border: #BFDBFE;
+    --theme-btn-sec-text: #1E3A8A;
+    --theme-btn-sec-hover: #EFF6FF;
+
+    --theme-card-shadow: 0 1px 3px 0 rgba(29, 78, 216, 0.06);
+
+    /* Feedback tokens */
+    --theme-success-bg: #ECFDF5;
+    --theme-success-border: #A7F3D0;
+    --theme-success-text: #065F46;
+    --theme-success-btn-bg: #059669;
+    --theme-success-btn-hover: #047857;
+
+    --theme-danger-bg: #FFF1F2;
+    --theme-danger-border: #FECDD3;
+    --theme-danger-text: #9F1239;
+    --theme-danger-btn-bg: #DC2626;
+    --theme-danger-btn-hover: #B91C1C;
+
+    --theme-warning-bg: #FFFBEB;
+    --theme-warning-border: #FDE68A;
+    --theme-warning-text: #92400E;
+
+    --theme-info-bg: #EFF6FF;
+    --theme-info-border: #BFDBFE;
+    --theme-info-text: #1E40AF;
+
+    /* Study / Exercise tokens */
+    --theme-study-accent: #2563EB;
+    --theme-study-accent-subtle: #EFF6FF;
+    --theme-study-accent-border: #BFDBFE;
+    --theme-study-accent-text: #1E40AF;
+}
+
+/* Base Body Application */
+body {
+    background-color: var(--theme-bg-page);
+    color: var(--theme-text-main);
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body, * {
+        transition: none !important;
+    }
+}
+
+header,
+footer {
+    background-color: var(--theme-bg-surface) !important;
+    border-color: var(--theme-border) !important;
+}
+
+/* ==========================================================================
+   THEME SWITCHER MENU COMPONENT RULES (ĐỒNG BỘ THEO MỌI CHỦ ĐỀ)
+   ========================================================================== */
+
+#theme-menu-panel {
+    background-color: var(--theme-bg-popover) !important;
+    border-color: var(--theme-border) !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.4) !important;
+}
+
+.theme-option-btn {
+    color: var(--theme-text-main) !important;
+    background-color: transparent !important;
+}
+
+.theme-option-btn:hover {
+    background-color: var(--theme-bg-hover) !important;
+    color: var(--theme-text-main) !important;
+}
+
+.theme-option-btn.theme-option-active {
+    background-color: var(--theme-bg-selected) !important;
+    color: var(--theme-primary) !important;
+    font-weight: 600 !important;
+}
+
+.theme-check-indicator {
+    color: var(--theme-primary) !important;
+}
+
+/* ==========================================================================
+   THEME ADAPTATION OVERRIDES FOR EXISTING BLADE & TAILWIND COMPONENTS
+   ========================================================================== */
+
+/* Dark & Plum Dark Modes */
+[data-theme="dark"],
+[data-theme="plum_dark"] {
+    /* Backgrounds & Cards */
+    .bg-white {
+        background-color: var(--theme-bg-card) !important;
+    }
+    .bg-slate-50 {
+        background-color: var(--theme-bg-page) !important;
+    }
+    .bg-slate-100,
+    .bg-slate-100\/60,
+    .bg-slate-100\/70,
+    .bg-slate-100\/80,
+    .bg-slate-100\/50 {
+        background-color: var(--theme-bg-muted) !important;
+    }
+    .bg-slate-200 {
+        background-color: var(--theme-border) !important;
+    }
+    .bg-slate-900 {
+        background-color: var(--theme-primary) !important;
+        color: var(--theme-primary-fg) !important;
+    }
+
+    /* Sub-containers & stats cards inside decks/show, dashboard, session */
+    .bg-slate-50\/60,
+    .bg-slate-50\/70,
+    .bg-slate-50\/80,
+    .bg-slate-50\/50,
+    .bg-slate-50\/40 {
+        background-color: var(--theme-bg-card-subtle) !important;
+        border-color: var(--theme-border) !important;
+    }
+
+    /* Text Colors */
+    .text-slate-900,
+    .text-slate-800,
+    .text-indigo-950 {
+        color: var(--theme-text-main) !important;
+    }
+    .text-slate-700,
+    .text-slate-600 {
+        color: var(--theme-text-muted) !important;
+    }
+    .text-slate-500,
+    .text-slate-400 {
+        color: var(--theme-text-subtle) !important;
+    }
+    .text-slate-300 {
+        color: var(--theme-border-strong) !important;
+    }
+
+    /* Borders */
+    .border-slate-200,
+    .border-slate-300,
+    .border-slate-200\/50,
+    .border-slate-200\/60 {
+        border-color: var(--theme-border) !important;
+    }
+    .border-slate-100 {
+        border-color: var(--theme-border-subtle) !important;
+    }
+    .divide-slate-200 > :not([hidden]) ~ :not([hidden]),
+    .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
+        border-color: var(--theme-border) !important;
+    }
+
+    /* Selected Item Cards (Phạm vi nội dung, chọn bộ từ, count preset) */
+    .selected-item-card,
+    label:has(input[type="checkbox"]:checked),
+    label:has(input[type="radio"]:checked) {
+        background-color: var(--theme-bg-selected) !important;
+        border-color: var(--theme-border-selected) !important;
+    }
+
+    .selected-item-card span,
+    label:has(input[type="checkbox"]:checked) span,
+    label:has(input[type="radio"]:checked) span {
+        color: var(--theme-text-main) !important;
+    }
+
+    /* Deck Stats Cards (Trung tâm học tập bộ từ) */
+    .deck-stat-total {
+        background-color: var(--theme-bg-card-subtle) !important;
+        border-color: var(--theme-border) !important;
+    }
+    .deck-stat-total span {
+        color: var(--theme-text-muted) !important;
+    }
+    .deck-stat-total .text-slate-900 {
+        color: var(--theme-text-main) !important;
+    }
+
+    .deck-stat-unstudied {
+        background-color: var(--theme-success-bg) !important;
+        border-color: var(--theme-success-border) !important;
+    }
+    .deck-stat-due {
+        background-color: var(--theme-warning-bg) !important;
+        border-color: var(--theme-warning-border) !important;
+    }
+    .deck-stat-difficult {
+        background-color: var(--theme-danger-bg) !important;
+        border-color: var(--theme-danger-border) !important;
+    }
+
+    /* Inactive / Completed study mode cards */
+    .opacity-75.cursor-not-allowed,
+    .deck-mode-card-disabled,
+    .exercise-card-disabled,
+    label:has(input[disabled]) {
+        background-color: var(--theme-bg-disabled) !important;
+        border-color: var(--theme-border-subtle) !important;
+        opacity: 0.8 !important;
+    }
+
+    .opacity-75.cursor-not-allowed span,
+    .opacity-75.cursor-not-allowed h3,
+    .opacity-75.cursor-not-allowed p,
+    .deck-mode-card-disabled span,
+    .deck-mode-card-disabled h3,
+    .deck-mode-card-disabled p,
+    .exercise-card-disabled span,
+    .exercise-card-disabled h3,
+    .exercise-card-disabled p,
+    .exercise-card-disabled div,
+    label:has(input[disabled]) span,
+    label:has(input[disabled]) p {
+        color: var(--theme-text-subtle) !important;
+    }
+
+    .exercise-card-disabled .text-slate-800,
+    .exercise-card-disabled .text-slate-900,
+    .deck-mode-card-disabled h3 {
+        color: var(--theme-text-muted) !important;
+    }
+
+    .exercise-disabled-badge {
+        background-color: var(--theme-danger-bg) !important;
+        border-color: var(--theme-danger-border) !important;
+        color: var(--theme-danger-text) !important;
+    }
+
+    /* Checkbox & Radio */
+    input[type="checkbox"],
+    input[type="radio"] {
+        background-color: var(--theme-input-bg) !important;
+        border-color: var(--theme-border-strong) !important;
+        color: var(--theme-primary) !important;
+    }
+    input[type="checkbox"]:checked,
+    input[type="radio"]:checked {
+        background-color: var(--theme-primary) !important;
+        border-color: var(--theme-primary) !important;
+    }
+
+    /* Modal overlay */
+    .bg-black\/50,
+    .bg-slate-900\/50 {
+        background-color: var(--theme-bg-overlay) !important;
+    }
+
+    /* Inputs, Selects, Textareas */
+    input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+    select,
+    textarea {
+        background-color: var(--theme-input-bg) !important;
+        color: var(--theme-input-text) !important;
+        border-color: var(--theme-input-border) !important;
+    }
+    input::placeholder,
+    textarea::placeholder {
+        color: var(--theme-input-placeholder) !important;
+        opacity: 0.9;
+    }
+    input:focus,
+    select:focus,
+    textarea:focus {
+        border-color: var(--theme-primary) !important;
+        box-shadow: 0 0 0 3px var(--theme-focus-ring) !important;
+    }
+
+    /* Primary Buttons & Accents */
+    .bg-indigo-600 {
+        background-color: var(--theme-primary) !important;
+        color: var(--theme-primary-fg) !important;
+    }
+    .hover\:bg-indigo-500:hover,
+    .hover\:bg-indigo-700:hover {
+        background-color: var(--theme-primary-hover) !important;
+    }
+    .text-indigo-600,
+    .text-indigo-700 {
+        color: var(--theme-primary) !important;
+    }
+    .hover\:text-indigo-600:hover,
+    .hover\:text-indigo-700:hover,
+    .hover\:text-indigo-800:hover {
+        color: var(--theme-primary-hover) !important;
+    }
+    .border-indigo-600,
+    .border-indigo-500 {
+        border-color: var(--theme-primary) !important;
+    }
+    .bg-indigo-50,
+    .bg-indigo-50\/70,
+    .bg-indigo-50\/50,
+    .bg-indigo-50\/40,
+    .bg-indigo-50\/30 {
+        background-color: var(--theme-primary-subtle) !important;
+    }
+    .border-indigo-200,
+    .border-indigo-300,
+    .border-indigo-100 {
+        border-color: var(--theme-primary-subtle-border) !important;
+    }
+    .text-indigo-800,
+    .text-indigo-700 {
+        color: var(--theme-primary-subtle-text) !important;
+    }
+    .text-indigo-400 {
+        color: var(--theme-primary) !important;
+    }
+    .bg-indigo-100,
+    .bg-indigo-100\/70 {
+        background-color: var(--theme-primary-subtle) !important;
+        color: var(--theme-primary-subtle-text) !important;
+    }
+
+    /* Study Purple Accents (Retention / Practice Stage) */
+    .bg-purple-600 {
+        background-color: var(--theme-study-accent) !important;
+        color: var(--theme-primary-fg) !important;
+    }
+    .hover\:bg-purple-700:hover {
+        background-color: var(--theme-study-accent-text) !important;
+    }
+    .text-purple-600,
+    .text-purple-700 {
+        color: var(--theme-study-accent) !important;
+    }
+    .bg-purple-50,
+    .bg-purple-100 {
+        background-color: var(--theme-study-accent-subtle) !important;
+        color: var(--theme-study-accent-text) !important;
+    }
+    .border-purple-200 {
+        border-color: var(--theme-study-accent-border) !important;
+    }
+    .text-purple-800 {
+        color: var(--theme-study-accent-text) !important;
+    }
+
+    /* Secondary / Neutral Buttons */
+    button.border-slate-300.bg-white,
+    a.border-slate-300.bg-white,
+    button.border-slate-200.bg-white,
+    a.border-slate-200.bg-white,
+    .btn-secondary {
+        background-color: var(--theme-btn-sec-bg) !important;
+        border-color: var(--theme-btn-sec-border) !important;
+        color: var(--theme-btn-sec-text) !important;
+    }
+    button.border-slate-300.bg-white:hover,
+    a.border-slate-300.bg-white:hover,
+    button.border-slate-200.bg-white:hover,
+    a.border-slate-200.bg-white:hover,
+    .btn-secondary:hover {
+        background-color: var(--theme-btn-sec-hover) !important;
+    }
+
+    /* Soft Alert / Feedback panels - êm dịu, không gắt */
+    .bg-emerald-50,
+    .bg-emerald-50\/60,
+    .bg-emerald-50\/50,
+    .bg-emerald-50\/40 {
+        background-color: var(--theme-success-bg) !important;
+        border-color: var(--theme-success-border) !important;
+        color: var(--theme-success-text) !important;
+    }
+    .text-emerald-900,
+    .text-emerald-800,
+    .text-emerald-700,
+    .text-emerald-600 {
+        color: var(--theme-success-text) !important;
+    }
+    .border-emerald-200,
+    .border-emerald-100 {
+        border-color: var(--theme-success-border) !important;
+    }
+    .bg-emerald-100,
+    .bg-emerald-100\/70 {
+        background-color: var(--theme-success-bg) !important;
+        color: var(--theme-success-text) !important;
+    }
+
+    .bg-rose-50,
+    .bg-rose-50\/60,
+    .bg-rose-50\/50,
+    .bg-rose-50\/40,
+    .bg-rose-50\/30 {
+        background-color: var(--theme-danger-bg) !important;
+        border-color: var(--theme-danger-border) !important;
+        color: var(--theme-danger-text) !important;
+    }
+    .text-rose-900,
+    .text-rose-800,
+    .text-rose-700,
+    .text-rose-600 {
+        color: var(--theme-danger-text) !important;
+    }
+    .border-rose-300,
+    .border-rose-200,
+    .border-rose-100 {
+        border-color: var(--theme-danger-border) !important;
+    }
+
+    .bg-amber-50,
+    .bg-amber-50\/90,
+    .bg-amber-50\/80,
+    .bg-amber-50\/60,
+    .bg-amber-50\/50,
+    .bg-amber-50\/40 {
+        background-color: var(--theme-warning-bg) !important;
+        border-color: var(--theme-warning-border) !important;
+        color: var(--theme-warning-text) !important;
+    }
+    .text-amber-900,
+    .text-amber-800,
+    .text-amber-700,
+    .text-amber-600 {
+        color: var(--theme-warning-text) !important;
+    }
+    .border-amber-300,
+    .border-amber-200,
+    .border-amber-100 {
+        border-color: var(--theme-warning-border) !important;
+    }
+    .bg-amber-100,
+    .bg-amber-100\/70,
+    .bg-amber-200 {
+        background-color: var(--theme-warning-bg) !important;
+        color: var(--theme-warning-text) !important;
+    }
+
+    .bg-blue-50,
+    .bg-blue-50\/70,
+    .bg-sky-100 {
+        background-color: var(--theme-info-bg) !important;
+        border-color: var(--theme-info-border) !important;
+        color: var(--theme-info-text) !important;
+    }
+    .text-blue-700,
+    .text-blue-900,
+    .text-sky-800 {
+        color: var(--theme-info-text) !important;
+    }
+
+    /* Study Cards & Practice Options */
+    .practice-option,
+    .unscramble-tile {
+        background-color: var(--theme-bg-card) !important;
+        border-color: var(--theme-border) !important;
+        color: var(--theme-text-main) !important;
+    }
+    .practice-option:hover,
+    .unscramble-tile:hover {
+        background-color: var(--theme-bg-hover) !important;
+        border-color: var(--theme-primary) !important;
+    }
+
+    /* Matching pairs button states */
+    .pair-term-btn,
+    .pair-meaning-btn {
+        background-color: var(--theme-bg-card) !important;
+        border-color: var(--theme-border) !important;
+        color: var(--theme-text-main) !important;
+    }
+
+    /* Admin badges */
+    .bg-amber-50.border-amber-200.text-amber-800 {
+        background-color: var(--theme-warning-bg) !important;
+        border-color: var(--theme-warning-border) !important;
+        color: var(--theme-warning-text) !important;
+    }
+}
+
+/* Rose Pastel Theme Overrides */
+[data-theme="rose_pastel"] {
+    .bg-slate-50 {
+        background-color: var(--theme-bg-page) !important;
+    }
+    .bg-slate-100 {
+        background-color: var(--theme-bg-muted) !important;
+    }
+    .text-slate-900,
+    .text-slate-800,
+    .text-indigo-950 {
+        color: var(--theme-text-main) !important;
+    }
+    .text-slate-700,
+    .text-slate-600 {
+        color: var(--theme-text-muted) !important;
+    }
+    .text-slate-500,
+    .text-slate-400 {
+        color: var(--theme-text-subtle) !important;
+    }
+    .border-slate-200,
+    .border-slate-300 {
+        border-color: var(--theme-border) !important;
+    }
+    .border-slate-100 {
+        border-color: var(--theme-border) !important;
+    }
+
+    input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+    select,
+    textarea {
+        border-color: var(--theme-input-border) !important;
+        color: var(--theme-input-text) !important;
+    }
+    input:focus,
+    select:focus,
+    textarea:focus {
+        border-color: var(--theme-primary) !important;
+        box-shadow: 0 0 0 3px var(--theme-focus-ring) !important;
+    }
+
+    .bg-indigo-600,
+    .bg-purple-600 {
+        background-color: var(--theme-primary) !important;
+        color: var(--theme-primary-fg) !important;
+    }
+    .hover\:bg-indigo-500:hover,
+    .hover\:bg-indigo-700:hover,
+    .hover\:bg-purple-700:hover {
+        background-color: var(--theme-primary-hover) !important;
+    }
+    .text-indigo-600,
+    .text-indigo-700,
+    .text-purple-600,
+    .text-purple-700 {
+        color: var(--theme-primary) !important;
+    }
+    .hover\:text-indigo-600:hover,
+    .hover\:text-indigo-700:hover,
+    .hover\:text-indigo-800:hover {
+        color: var(--theme-primary-hover) !important;
+    }
+    .border-indigo-600,
+    .border-indigo-500 {
+        border-color: var(--theme-primary) !important;
+    }
+    .bg-indigo-50,
+    .bg-indigo-50\/70,
+    .bg-indigo-50\/50,
+    .bg-purple-50 {
+        background-color: var(--theme-primary-subtle) !important;
+    }
+    .border-indigo-200,
+    .border-indigo-300,
+    .border-purple-200 {
+        border-color: var(--theme-primary-subtle-border) !important;
+    }
+    .text-indigo-800,
+    .text-purple-800 {
+        color: var(--theme-primary) !important;
+    }
+}
+
+/* Blue Light Theme Overrides */
+[data-theme="blue_light"] {
+    .bg-slate-50 {
+        background-color: var(--theme-bg-page) !important;
+    }
+    .bg-slate-100 {
+        background-color: var(--theme-bg-muted) !important;
+    }
+    .text-slate-900,
+    .text-slate-800,
+    .text-indigo-950 {
+        color: var(--theme-text-main) !important;
+    }
+    .text-slate-700,
+    .text-slate-600 {
+        color: var(--theme-text-muted) !important;
+    }
+    .text-slate-500,
+    .text-slate-400 {
+        color: var(--theme-text-subtle) !important;
+    }
+    .border-slate-200,
+    .border-slate-300 {
+        border-color: var(--theme-border) !important;
+    }
+    .border-slate-100 {
+        border-color: var(--theme-border) !important;
+    }
+
+    input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+    select,
+    textarea {
+        border-color: var(--theme-input-border) !important;
+        color: var(--theme-input-text) !important;
+    }
+    input:focus,
+    select:focus,
+    textarea:focus {
+        border-color: var(--theme-primary) !important;
+        box-shadow: 0 0 0 3px var(--theme-focus-ring) !important;
+    }
+
+    .bg-indigo-600 {
+        background-color: var(--theme-primary) !important;
+        color: var(--theme-primary-fg) !important;
+    }
+    .hover\:bg-indigo-500:hover,
+    .hover\:bg-indigo-700:hover {
+        background-color: var(--theme-primary-hover) !important;
+    }
+    .text-indigo-600,
+    .text-indigo-700 {
+        color: var(--theme-primary) !important;
+    }
+    .hover\:text-indigo-600:hover,
+    .hover\:text-indigo-700:hover,
+    .hover\:text-indigo-800:hover {
+        color: var(--theme-primary-hover) !important;
+    }
+    .border-indigo-600,
+    .border-indigo-500 {
+        border-color: var(--theme-primary) !important;
+    }
+    .bg-indigo-50,
+    .bg-indigo-50\/70,
+    .bg-indigo-50\/50 {
+        background-color: var(--theme-primary-subtle) !important;
+    }
+    .border-indigo-200,
+    .border-indigo-300 {
+        border-color: var(--theme-primary-subtle-border) !important;
+    }
+    .text-indigo-800 {
+        color: var(--theme-primary) !important;
+    }
+}
+
+/* ==========================================================================
+   3D FLASHCARD FLIP COMPONENT (HIỆU ỨNG THẺ LẬT 3D MƯỢT MÀ)
+   ========================================================================== */
+.flashcard-3d-scene {
+    perspective: 1200px;
+    width: 100%;
+}
+
+.flashcard-3d-card {
+    position: relative;
+    width: 100%;
+    min-height: 320px;
+    height: 340px;
+    transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    user-select: none;
+    border-radius: 1.5rem;
+}
+
+.flashcard-3d-card.is-flipped {
+    transform: rotateY(180deg);
+}
+
+.flashcard-3d-face {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    border-radius: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+.flashcard-3d-front {
+    transform: rotateY(0deg);
+    z-index: 2;
+}
+
+.flashcard-3d-back {
+    transform: rotateY(180deg);
+    z-index: 1;
+}
+

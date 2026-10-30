@@ -99,7 +99,7 @@
                                 <div class="min-w-0 flex-1 text-xs">
                                     <div class="font-bold text-slate-800 truncate">{{ $deck->name }}</div>
                                     <div class="text-slate-500 mt-0.5">
-                                        {{ $deck->learningLanguage->name }} &bull; {{ $deck->entries_count }} mục từ
+                                        {{ $deck->learningLanguage->name }} &bull; {{ $deck->entries_count }} từ
                                     </div>
                                 </div>
                             </label>

@@ -37,7 +37,8 @@ class CreatePracticeSessionAction
         string $scope = 'all',
         int $requestedCount = 10,
         array $selectedExerciseTypes = [],
-        bool $isDifficultOnly = false
+        bool $isDifficultOnly = false,
+        ?array $specificMeaningIds = null
     ): ?StudySession {
         // Kiểm tra quyền truy cập các bộ từ
         $accessibleDecks = Deck::query()
@@ -60,13 +61,23 @@ class CreatePracticeSessionAction
         $maxBatch = (int) config('polyvocab.study.practice.max_count', 50);
         $count = max($minBatch, min($maxBatch, $requestedCount));
 
-        // Lấy danh sách nghĩa theo scope
-        $meanings = $this->progressService
-            ->getEligibleMeaningsForPractice($user, $validDeckIds, $scope, $isDifficultOnly)
-            ->with(['vocabularyEntry', 'examples'])
-            ->inRandomOrder()
-            ->take($count)
-            ->get();
+        // Lấy danh sách nghĩa theo danh sách cụ thể hoặc theo scope
+        if (! empty($specificMeaningIds)) {
+            $meanings = EntryMeaning::query()
+                ->whereIn('id', $specificMeaningIds)
+                ->whereHas('vocabularyEntry', function ($q) use ($validDeckIds) {
+                    $q->whereIn('deck_id', $validDeckIds);
+                })
+                ->with(['vocabularyEntry', 'examples'])
+                ->get();
+        } else {
+            $meanings = $this->progressService
+                ->getEligibleMeaningsForPractice($user, $validDeckIds, $scope, $isDifficultOnly)
+                ->with(['vocabularyEntry', 'examples'])
+                ->inRandomOrder()
+                ->take($count)
+                ->get();
+        }
 
         if ($meanings->isEmpty()) {
             return null;

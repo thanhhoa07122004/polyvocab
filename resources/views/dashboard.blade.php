@@ -35,7 +35,7 @@
             </div>
         </div>
 
-        <!-- Phiên học chưa kết thúc (nếu có) -->
+        <!-- Bài học đang dở (nếu có) -->
         @if ($stats['active_session'])
             <div class="mt-6 rounded-2xl border border-amber-200 bg-amber-50/70 p-4 sm:p-5">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -47,7 +47,7 @@
                         </div>
                         <div>
                             <span class="inline-flex items-center rounded-md bg-amber-200/60 px-2 py-0.5 text-xs font-semibold text-amber-900">
-                                Phiên chưa kết thúc
+                                BẠN ĐANG HỌC DỞ
                             </span>
                             <h3 class="mt-1 text-base font-bold text-slate-900">
                                 {{ $stats['active_session']->deck->name }}
@@ -55,7 +55,7 @@
                             <p class="text-xs text-slate-600 mt-0.5">
                                 Chế độ: <span class="font-medium text-slate-800">{{ $stats['active_session']->mode->label() }}</span> &bull;
                                 Giai đoạn: <span class="font-medium text-slate-800">{{ $stats['active_session']->stage->label() }}</span> &bull;
-                                Đã xử lý: <span class="font-semibold text-amber-800">{{ $stats['active_session']->completedItemsCount() }}/{{ $stats['active_session']->items->count() }} nghĩa</span> &bull;
+                                Đã học: <span class="font-semibold text-amber-800">{{ $stats['active_session']->completedItemsCount() }}/{{ $stats['active_session']->items->count() }} từ</span> &bull;
                                 Tương tác gần nhất: {{ $stats['active_session']->last_interacted_at ? $stats['active_session']->last_interacted_at->diffForHumans() : 'Vừa xong' }}
                             </p>
                         </div>
@@ -63,7 +63,8 @@
                     <div class="flex items-center space-x-2 shrink-0">
                         <a href="{{ route('study.session.show', $stats['active_session']) }}"
                            class="inline-flex items-center justify-center rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white shadow-2xs hover:bg-amber-700 transition">
-                            Tiếp tục phiên học &rarr;
+                            Tiếp tục học &rarr;
+                            <span class="sr-only">Tiếp tục phiên học</span>
                         </a>
                     </div>
                 </div>
@@ -86,7 +87,7 @@
                 </div>
                 <h2 class="mt-4 text-lg font-bold text-slate-900">Học từ mới</h2>
                 <p class="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
-                    Làm quen từng nét nghĩa chưa học, hiểu rõ ngữ cảnh ví dụ và khởi tạo lịch ôn SRS.
+                    Làm quen các từ mới và nghĩa của từ, hiểu rõ ngữ cảnh ví dụ và ghi nhớ từ vựng.
                 </p>
             </div>
             <div class="mt-6 pt-4 border-t border-slate-100">
@@ -247,7 +248,7 @@
                 </div>
                 <h3 class="mt-3 text-base font-bold text-slate-900">Các bộ từ của bạn hiện chưa có từ vựng</h3>
                 <p class="mx-auto mt-1 max-w-md text-sm text-slate-600">
-                    Bạn cần thêm từ vựng vào bộ từ để có thể bắt đầu các phiên học từ mới, ôn tập hoặc làm bài kiểm tra.
+                    Bạn cần thêm từ vựng vào bộ từ để có thể bắt đầu học từ mới, ôn tập hoặc làm bài kiểm tra.
                 </p>
                 <div class="mt-5 flex justify-center">
                     <a href="{{ route('decks.index') }}"
@@ -272,7 +273,7 @@
                                     @endif
                                 </span>
                                 <span class="rounded-full bg-slate-100 px-2 py-0.5 font-medium text-slate-600">
-                                    {{ $deck->entries_count }} mục từ
+                                    {{ $deck->entries_count }} từ
                                 </span>
                             </div>
                             <h3 class="mt-2 text-base font-bold text-slate-900 line-clamp-1">

@@ -47,31 +47,55 @@ class StudySessionController extends Controller
             'items.entryMeaning.examples',
         ]);
 
-        // Xác định mục hiện tại cần xử lý trong nhóm hiện tại
-        $chunkItems = $session->items
-            ->where('chunk_index', $session->current_chunk);
+        $isRetrying = false;
+        $previousItem = null;
 
-        if ($session->stage === StudyStage::Familiarization) {
-            $currentItem = $chunkItems->firstWhere('familiarized_at', null);
-            // Nếu tất cả trong nhóm đã làm quen nhưng phiên chưa đổi stage, tự động chuyển stage
+        if ($session->mode === \App\Enums\StudyMode::LearnNew) {
+            // Luồng Học từ mới: Chỉ làm quen, không tự chuyển sang luyện nhớ
+            $requestedItemId = $request->query('item_id');
+            if ($requestedItemId) {
+                $currentItem = $session->items->firstWhere('id', (int) $requestedItemId);
+            } else {
+                $currentItem = $session->items->sortBy('sort_order')->firstWhere('familiarized_at', null);
+            }
+
             if (! $currentItem) {
-                $session->update(['stage' => StudyStage::RetentionPractice]);
-                $currentItem = $chunkItems->firstWhere('practiced_at', null);
+                // Toàn bộ đã làm quen xong
+                $session->update(['status' => StudySessionStatus::Completed]);
+                return redirect()->route('study.session.complete', $session);
+            }
+
+            // Tìm thẻ trước đó để có thể quay lại
+            $allSortedItems = $session->items->sortBy('sort_order')->values();
+            $currentIndex = $allSortedItems->search(fn ($it) => $it->id === $currentItem->id);
+            if ($currentIndex !== false && $currentIndex > 0) {
+                $previousItem = $allSortedItems->get($currentIndex - 1);
             }
         } else {
-            $currentItem = $chunkItems->firstWhere('practiced_at', null);
-        }
+            // Luồng Luyện tập (Practice) & Ôn tập (Review): Vào thẳng luyện nhớ
+            $currentItem = $session->items->sortBy('sort_order')->firstWhere('practiced_at', null);
 
-        // Nếu cả nhóm đã hoàn thành luyện nhớ
-        if (! $currentItem) {
-            $maxChunk = $session->items->max('chunk_index');
-            if ($session->current_chunk < $maxChunk) {
-                $session->update([
-                    'current_chunk' => $session->current_chunk + 1,
-                    'stage' => StudyStage::Familiarization,
-                ]);
-                return redirect()->route('study.session.show', $session);
-            } else {
+            if (! $currentItem) {
+                // Kiểm tra hàng đợi thử lại câu sai (retry_queue)
+                $settings = $session->settings ?: [];
+                $activeRetryId = $settings['active_retry_item_id'] ?? null;
+                $retryQueue = $settings['retry_queue'] ?? [];
+
+                if ($activeRetryId && $session->items->find($activeRetryId)) {
+                    $currentItem = $session->items->find($activeRetryId);
+                    $isRetrying = true;
+                } elseif (! empty($retryQueue)) {
+                    $nextRetryId = array_shift($retryQueue);
+                    $settings['active_retry_item_id'] = $nextRetryId;
+                    $settings['retry_queue'] = $retryQueue;
+                    $session->settings = $settings;
+                    $session->save();
+                    $currentItem = $session->items->find($nextRetryId);
+                    $isRetrying = true;
+                }
+            }
+
+            if (! $currentItem) {
                 $session->update(['status' => StudySessionStatus::Completed]);
                 return redirect()->route('study.session.complete', $session);
             }
@@ -79,17 +103,17 @@ class StudySessionController extends Controller
 
         // Tính toán tiến độ
         $totalItemsCount = $session->items->count();
-        $chunkSize = $session->chunk_size;
+        $chunkSize = $session->chunk_size ?: $totalItemsCount;
         $currentChunkIndex = $session->current_chunk;
-        $totalChunks = $session->totalChunks();
+        $totalChunks = 1;
 
-        // Tiến độ số nghĩa đã làm quen / luyện nhớ
+        // Tiến độ số từ đã làm quen / luyện nhớ
         $familiarizedCount = $session->items->whereNotNull('familiarized_at')->count();
         $practicedCount = $session->items->whereNotNull('practiced_at')->count();
 
-        // Chuẩn bị dữ liệu cho bài luyện nhớ nếu đang ở stage retention_practice
+        // Chuẩn bị dữ liệu cho bài luyện nhớ nếu không phải luồng Làm quen
         $practiceQuestion = null;
-        if ($session->stage === StudyStage::RetentionPractice) {
+        if ($session->mode !== \App\Enums\StudyMode::LearnNew) {
             $practiceQuestion = $this->preparePracticeQuestion($session, $currentItem);
         }
 
@@ -105,6 +129,8 @@ class StudySessionController extends Controller
             'familiarizedCount' => $familiarizedCount,
             'practicedCount' => $practicedCount,
             'practiceQuestion' => $practiceQuestion,
+            'previousItem' => $previousItem,
+            'isRetrying' => $isRetrying,
         ]);
     }
 
@@ -366,6 +392,13 @@ class StudySessionController extends Controller
         $end = $session->last_interacted_at ?? now();
         $activeMinutes = max(1, min(120, (int) round($end->diffInMinutes($start))));
 
+        // Điểm đánh giá lần làm đầu tiên (không tính lần thử lại)
+        $firstAttemptItems = $session->items->whereNotNull('first_attempt_result');
+        $firstAttemptTotal = $firstAttemptItems->count();
+        $firstAttemptPass = $firstAttemptItems->whereIn('first_attempt_result', ['pass', 'self_remember'])->count();
+        $accuracyPercent = $firstAttemptTotal > 0 ? (int) round(($firstAttemptPass / $firstAttemptTotal) * 100) : 100;
+        $retriesCount = count($session->settings['retries_count'] ?? []);
+
         return view('study.complete', [
             'session' => $session,
             'deck' => $session->deck,
@@ -377,6 +410,10 @@ class StudySessionController extends Controller
             'skippedCount' => $skippedCount,
             'selfRememberCount' => $selfRememberCount,
             'selfForgotCount' => $selfForgotCount,
+            'firstAttemptTotal' => $firstAttemptTotal,
+            'firstAttemptPass' => $firstAttemptPass,
+            'accuracyPercent' => $accuracyPercent,
+            'retriesCount' => $retriesCount,
             'hintedCount' => $hintedCount,
             'needsExtraPracticeItems' => $needsExtraPracticeItems,
             'srsUpdated' => $srsUpdated,

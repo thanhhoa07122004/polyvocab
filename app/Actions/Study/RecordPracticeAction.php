@@ -34,12 +34,23 @@ class RecordPracticeAction
             $finalizedMeanings = $settings['finalized_meanings'] ?? [];
             $isExtraPractice = (bool) ($settings['is_extra_practice'] ?? false);
 
-            $isFirstAttempt = ! in_array($meaning->id, $finalizedMeanings, true);
+            $isFirstAttempt = ($item->attempts_count === 0);
 
-            $item->update([
+            $updateData = [
                 'practiced_at' => now(),
                 'practice_result' => $result,
-            ]);
+                'attempts_count' => $item->attempts_count + 1,
+            ];
+
+            if ($isFirstAttempt) {
+                $updateData['first_attempt_result'] = $result;
+            }
+
+            if ($usedHint) {
+                $updateData['used_hint'] = true;
+            }
+
+            $item->update($updateData);
 
             // Lấy hoặc tạo StudyRecord
             $record = StudyRecord::firstOrNew([
@@ -92,44 +103,48 @@ class RecordPracticeAction
                 $record->save();
             }
 
-            // Quản lý số lần thử lại câu sai
+            // Quản lý số lần thử lại câu sai (In-session retry logic: tối đa 3 lần thử lại)
             $retriesCount = $settings['retries_count'] ?? [];
-            $maxRetries = (int) config('polyvocab.study.review_policy.max_session_retries', 2);
+            $retryQueue = $settings['retry_queue'] ?? [];
+            $maxRetries = 3;
             $needsExtraPractice = false;
 
-            if ($result === 'fail') {
+            // Xóa active_retry_item_id nếu vừa làm xong
+            if (isset($settings['active_retry_item_id']) && $settings['active_retry_item_id'] === $item->id) {
+                unset($settings['active_retry_item_id']);
+            }
+
+            if (in_array($result, ['fail', 'self_forgot'], true)) {
                 $currentRetries = ($retriesCount[$item->id] ?? 0) + 1;
                 $retriesCount[$item->id] = $currentRetries;
-                if ($currentRetries >= $maxRetries) {
+
+                if ($currentRetries < $maxRetries) {
+                    // Đưa vào hàng đợi thử lại sau ở cuối phiên hoặc sau các câu khác
+                    if (! in_array($item->id, $retryQueue, true)) {
+                        $retryQueue[] = $item->id;
+                    }
+                } else {
                     $needsExtraPractice = true;
                 }
+            } else {
+                // Trả lời đúng -> gỡ khỏi retryQueue nếu có
+                $retryQueue = array_values(array_filter($retryQueue, fn ($id) => $id !== $item->id));
             }
-            $settings['retries_count'] = $retriesCount;
 
+            $settings['retries_count'] = $retriesCount;
+            $settings['retry_queue'] = $retryQueue;
             $session->settings = $settings;
 
-            // Kiểm tra tiến độ hoàn thành nhóm hoặc phiên
-            $currentChunkItems = $session->items()
-                ->where('chunk_index', $session->current_chunk)
-                ->get();
-
-            $allChunkPracticed = $currentChunkItems->every(fn ($it) => $it->practiced_at !== null);
+            // Kiểm tra xem tất cả các câu hỏi chính đã xong và hàng đợi thử lại đã trống chưa
+            $unpracticedCount = $session->items()->whereNull('practiced_at')->count();
+            $hasPendingRetries = ! empty($retryQueue);
 
             $sessionCompleted = false;
             $nextChunkStarted = false;
 
-            if ($allChunkPracticed) {
-                $maxChunk = $session->items()->max('chunk_index');
-                if ($session->current_chunk < $maxChunk) {
-                    $session->current_chunk = $session->current_chunk + 1;
-                    $session->stage = ($session->mode === StudyMode::Review)
-                        ? StudyStage::RetentionPractice
-                        : StudyStage::Familiarization;
-                    $nextChunkStarted = true;
-                } else {
-                    $session->status = StudySessionStatus::Completed;
-                    $sessionCompleted = true;
-                }
+            if ($unpracticedCount === 0 && ! $hasPendingRetries) {
+                $session->status = StudySessionStatus::Completed;
+                $sessionCompleted = true;
             }
 
             $session->last_interacted_at = now();

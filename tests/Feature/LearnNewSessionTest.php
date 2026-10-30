@@ -76,7 +76,6 @@ class LearnNewSessionTest extends TestCase
             $entry = VocabularyEntry::factory()->create(['deck_id' => $deck->id, 'term' => "Term {$i}"]);
             $meaning = EntryMeaning::factory()->create(['vocabulary_entry_id' => $entry->id, 'meaning' => "Nghĩa {$i}"]);
             if ($i === 1) {
-                // Tạo câu ví dụ cho nghĩa 1
                 EntryExample::factory()->create(['entry_meaning_id' => $meaning->id, 'sentence' => 'Sample sentence with Term 1']);
             }
         }
@@ -85,17 +84,11 @@ class LearnNewSessionTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Du học Anh');
-        $response->assertSee('3 nghĩa chưa học');
-        $response->assertSee('Chia thành nhóm nhỏ để làm quen rồi luyện nhớ');
-        $response->assertSee('Thẻ ghi nhớ (Flashcard)');
-        $response->assertSee('Trắc nghiệm: Chọn nghĩa đúng');
-        $response->assertSee('Bắt đầu học ngay');
-
-        // Dạng audio phải bị tạm khóa có lý do rõ ràng
-        $response->assertSee('Chưa có tệp âm thanh thu âm hoặc dịch vụ phát âm');
+        $response->assertSee('Học từ mới');
+        $response->assertSee('Bắt đầu làm quen');
     }
 
-    public function test_starting_new_session_creates_session_and_chunks_items_by_5(): void
+    public function test_starting_new_session_creates_session_for_familiarization(): void
     {
         $owner = User::factory()->create();
 
@@ -105,7 +98,6 @@ class LearnNewSessionTest extends TestCase
             'meaning_language_id' => $this->langVi->id,
         ]);
 
-        // Tạo 12 nghĩa để kiểm tra chunking (nhóm 0: 5, nhóm 1: 5, nhóm 2: 2)
         for ($i = 1; $i <= 12; $i++) {
             $entry = VocabularyEntry::factory()->create(['deck_id' => $deck->id, 'term' => "Word {$i}"]);
             EntryMeaning::factory()->create(['vocabulary_entry_id' => $entry->id, 'meaning' => "Meaning {$i}"]);
@@ -121,7 +113,6 @@ class LearnNewSessionTest extends TestCase
             'mode' => StudyMode::LearnNew->value,
             'stage' => StudyStage::Familiarization->value,
             'status' => StudySessionStatus::InProgress->value,
-            'chunk_size' => 5,
             'current_chunk' => 0,
         ]);
 
@@ -129,9 +120,6 @@ class LearnNewSessionTest extends TestCase
         $response->assertRedirect(route('study.session.show', $session));
 
         $this->assertCount(12, $session->items);
-        $this->assertEquals(5, $session->items()->where('chunk_index', 0)->count());
-        $this->assertEquals(5, $session->items()->where('chunk_index', 1)->count());
-        $this->assertEquals(2, $session->items()->where('chunk_index', 2)->count());
     }
 
     public function test_page_reload_does_not_create_duplicate_session(): void
@@ -212,7 +200,7 @@ class LearnNewSessionTest extends TestCase
         $this->assertEquals(1, $record->repetition_level);
     }
 
-    public function test_when_chunk_familiarization_completes_session_switches_to_retention_practice(): void
+    public function test_when_familiarization_completes_session_marks_completed(): void
     {
         $owner = User::factory()->create();
 
@@ -225,14 +213,13 @@ class LearnNewSessionTest extends TestCase
         $entry = VocabularyEntry::factory()->create(['deck_id' => $deck->id, 'term' => 'Sun']);
         $meaning = EntryMeaning::factory()->create(['vocabulary_entry_id' => $entry->id, 'meaning' => 'Mặt trời']);
 
-        // Phiên chỉ có 1 item trong chunk 0
         $session = StudySession::create([
             'user_id' => $owner->id,
             'deck_id' => $deck->id,
             'mode' => StudyMode::LearnNew,
             'stage' => StudyStage::Familiarization,
             'status' => StudySessionStatus::InProgress,
-            'chunk_size' => 5,
+            'chunk_size' => 1,
             'current_chunk' => 0,
         ]);
 
@@ -249,14 +236,13 @@ class LearnNewSessionTest extends TestCase
         ]), []);
 
         $response->assertOk();
-        $response->assertJsonPath('data.transitioned_to_practice', true);
-        $response->assertJsonPath('data.session_stage', StudyStage::RetentionPractice->value);
+        $response->assertJsonPath('data.session_completed', true);
 
         $session->refresh();
-        $this->assertEquals(StudyStage::RetentionPractice, $session->stage);
+        $this->assertEquals(StudySessionStatus::Completed, $session->status);
     }
 
-    public function test_practice_submission_updates_spaced_repetition_record(): void
+    public function test_can_start_practice_from_completed_learn_new_session(): void
     {
         $owner = User::factory()->create();
 
@@ -273,13 +259,11 @@ class LearnNewSessionTest extends TestCase
             'user_id' => $owner->id,
             'deck_id' => $deck->id,
             'mode' => StudyMode::LearnNew,
-            'stage' => StudyStage::RetentionPractice,
-            'status' => StudySessionStatus::InProgress,
-            'chunk_size' => 5,
-            'current_chunk' => 0,
+            'stage' => StudyStage::Familiarization,
+            'status' => StudySessionStatus::Completed,
         ]);
 
-        $item = StudySessionItem::create([
+        StudySessionItem::create([
             'study_session_id' => $session->id,
             'entry_meaning_id' => $meaning->id,
             'sort_order' => 0,
@@ -287,24 +271,16 @@ class LearnNewSessionTest extends TestCase
             'familiarized_at' => now(),
         ]);
 
-        // Trả lời đúng trong bài luyện nhớ
-        $response = $this->actingAs($owner)->postJson(route('study.session.practice', [
-            'session' => $session,
-            'item' => $item,
-        ]), [
-            'result' => 'pass',
-        ]);
+        $response = $this->actingAs($owner)->post(route('study.practice.from_session', $session));
 
-        $response->assertOk();
-        $response->assertJson(['success' => true]);
+        $response->assertRedirect();
+        $practiceSession = StudySession::where('user_id', $owner->id)
+            ->where('mode', StudyMode::PracticeCustom)
+            ->first();
 
-        $record = StudyRecord::where('user_id', $owner->id)->where('entry_meaning_id', $meaning->id)->first();
-        $this->assertNotNull($record);
-        $this->assertEquals(1, $record->review_count);
-        $this->assertEquals(1, $record->repetition_level);
-
-        $session->refresh();
-        $this->assertEquals(StudySessionStatus::Completed, $session->status);
+        $this->assertNotNull($practiceSession);
+        $this->assertEquals(StudyStage::RetentionPractice, $practiceSession->stage);
+        $this->assertCount(1, $practiceSession->items);
     }
 
     public function test_can_pause_and_abandon_session(): void
@@ -337,4 +313,3 @@ class LearnNewSessionTest extends TestCase
         $this->assertEquals(StudySessionStatus::Abandoned, $session->status);
     }
 }
-

@@ -12,7 +12,7 @@ class ExerciseEligibilityService
      * Trả về danh sách dạng bài kèm:
      * - id, name, description, example
      * - is_eligible: boolean
-     * - eligible_meanings_count: int
+     * - eligible_count: int
      * - disabled_reason: string|null
      *
      * @return array<string, array<string, mixed>>
@@ -30,9 +30,27 @@ class ExerciseEligibilityService
         $distinctTermsCount = $deck->entries()->distinct('term')->count('term');
 
         // Số nghĩa có ít nhất một câu ví dụ
-        $meaningsWithExamplesCount = EntryMeaning::whereHas('vocabularyEntry', function ($q) use ($deck) {
+        $meaningsWithExamples = EntryMeaning::whereHas('vocabularyEntry', function ($q) use ($deck) {
             $q->where('deck_id', $deck->id);
-        })->has('examples')->count();
+        })->has('examples')
+        ->with(['vocabularyEntry:id,term', 'examples:id,entry_meaning_id,sentence'])
+        ->get();
+
+        $meaningsWithExamplesCount = $meaningsWithExamples->count();
+
+        // Đếm số nghĩa có câu ví dụ thực sự chứa từ vựng (để tạo câu điền từ hợp lệ)
+        $clozeEligibleCount = $meaningsWithExamples->filter(function ($meaning) {
+            $term = $meaning->vocabularyEntry?->term;
+            if (! $term) {
+                return false;
+            }
+            foreach ($meaning->examples as $ex) {
+                if ($ex->sentence && mb_stripos($ex->sentence, $term) !== false) {
+                    return true;
+                }
+            }
+            return false;
+        })->count();
 
         // Hiện tại hệ thống chưa tích hợp tệp audio upload riêng
         $meaningsWithAudioCount = 0;
@@ -44,21 +62,37 @@ class ExerciseEligibilityService
             $reason = null;
             $eligibleCount = $totalMeaningsCount;
 
+            // Lấy tên và mô tả từ file dịch nếu có
+            $localizedName = trans("study.exercises.{$key}.name");
+            if ($localizedName && $localizedName !== "study.exercises.{$key}.name") {
+                $type['name'] = $localizedName;
+            }
+            $localizedDesc = trans("study.exercises.{$key}.desc");
+            if ($localizedDesc && $localizedDesc !== "study.exercises.{$key}.desc") {
+                $type['description'] = $localizedDesc;
+            }
+
             // Kiểm tra yêu cầu audio
             if (! empty($type['requires_audio'])) {
                 if ($meaningsWithAudioCount === 0) {
                     $isEligible = false;
                     $eligibleCount = 0;
-                    $reason = 'Chưa có tệp âm thanh thu âm hoặc dịch vụ phát âm cho bộ từ này.';
+                    $reason = trans('study.reasons.no_audio');
                 }
             }
 
-            // Kiểm tra yêu cầu câu ví dụ
+            // Kiểm tra yêu cầu câu ví dụ (dành riêng cho điền từ)
             if ($isEligible && ! empty($type['requires_examples'])) {
-                $eligibleCount = $meaningsWithExamplesCount;
                 if ($meaningsWithExamplesCount === 0) {
                     $isEligible = false;
-                    $reason = 'Bộ từ chưa có câu ví dụ nào. Cần thêm ví dụ cho các nghĩa để kích hoạt dạng bài này.';
+                    $eligibleCount = 0;
+                    $reason = trans('study.reasons.no_examples');
+                } elseif ($clozeEligibleCount === 0) {
+                    $isEligible = false;
+                    $eligibleCount = 0;
+                    $reason = trans('study.reasons.no_suitable_cloze');
+                } else {
+                    $eligibleCount = $clozeEligibleCount;
                 }
             }
 
@@ -66,19 +100,19 @@ class ExerciseEligibilityService
             if ($isEligible) {
                 if ($key === 'multiple_choice_meaning_to_term' && $distinctTermsCount < 2) {
                     $isEligible = false;
-                    $reason = 'Cần tối thiểu 2 từ vựng khác nhau trong bộ để tạo các phương án lựa chọn.';
+                    $reason = trans('study.reasons.need_min_terms', ['min' => 2]);
                 } elseif ($key === 'multiple_choice_term_to_meaning' && $totalMeaningsCount < 2) {
                     $isEligible = false;
-                    $reason = 'Cần tối thiểu 2 nghĩa khác nhau trong bộ để tạo các phương án trắc nghiệm.';
+                    $reason = trans('study.reasons.need_min_meanings', ['min' => 2]);
                 } elseif ($key === 'matching_pairs' && $totalMeaningsCount < 2) {
                     $isEligible = false;
-                    $reason = 'Cần tối thiểu 2 nghĩa trong bộ để có thể tạo bài tập ghép cặp.';
+                    $reason = trans('study.reasons.need_min_meanings', ['min' => 2]);
                 } elseif ($key === 'listen_and_choose' && $totalMeaningsCount < 2) {
                     $isEligible = false;
-                    $reason = 'Cần tối thiểu 2 nghĩa khác nhau trong bộ để tạo bài tập nghe và chọn.';
+                    $reason = trans('study.reasons.need_min_meanings', ['min' => 2]);
                 } elseif ($totalMeaningsCount < ($type['min_deck_meanings'] ?? 1)) {
                     $isEligible = false;
-                    $reason = 'Số lượng từ vựng trong bộ chưa đáp ứng yêu cầu tối thiểu của dạng bài này.';
+                    $reason = trans('study.reasons.need_min_meanings', ['min' => $type['min_deck_meanings'] ?? 1]);
                 }
             }
 
@@ -92,4 +126,3 @@ class ExerciseEligibilityService
         return $results;
     }
 }
-

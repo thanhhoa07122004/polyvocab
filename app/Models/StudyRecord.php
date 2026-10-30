@@ -19,6 +19,7 @@ class StudyRecord extends Model
         'user_id',
         'deck_id',
         'entry_meaning_id',
+        'familiarized_at',
         'repetition_level',
         'ease_factor',
         'interval_days',
@@ -38,6 +39,7 @@ class StudyRecord extends Model
     protected function casts(): array
     {
         return [
+            'familiarized_at' => 'datetime',
             'repetition_level' => 'integer',
             'ease_factor' => 'decimal:2',
             'interval_days' => 'integer',

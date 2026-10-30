@@ -147,11 +147,54 @@ class PracticeController extends Controller
 
         if (! $session) {
             return back()->withInput()->withErrors([
-                'count' => 'Không tìm thấy nghĩa nào phù hợp trong phạm vi đã chọn để bắt đầu luyện tập.',
+                'count' => 'Không tìm thấy từ nào phù hợp trong phạm vi đã chọn để bắt đầu luyện tập.',
             ]);
         }
 
         return redirect()->route('study.session.show', $session);
+    }
+
+    /**
+     * Bắt đầu phiên luyện tập riêng cho các từ vừa làm quen xong.
+     */
+    public function startFromSession(Request $request, \App\Models\StudySession $session): RedirectResponse
+    {
+        if ($session->user_id !== $request->user()->id) {
+            abort(403);
+        }
+
+        $user = $request->user();
+        $meaningIds = $session->items->pluck('entry_meaning_id')->all();
+
+        if (empty($meaningIds)) {
+            return redirect()->route('study.new.prepare', $session->deck)
+                ->with('error', 'Không tìm thấy từ nào trong lượt học này.');
+        }
+
+        $deck = $session->deck;
+        $evaluatedExercises = $this->eligibilityService->evaluateDeckExercises($deck);
+        $validTypes = array_keys(array_filter($evaluatedExercises, fn ($ex) => $ex['is_eligible']));
+
+        if (empty($validTypes)) {
+            $validTypes = ['flashcard'];
+        }
+
+        $practiceSession = $this->createPracticeAction->execute(
+            user: $user,
+            deckIds: [$deck->id],
+            scope: 'recent_learned',
+            requestedCount: count($meaningIds),
+            selectedExerciseTypes: $validTypes,
+            isDifficultOnly: false,
+            specificMeaningIds: $meaningIds
+        );
+
+        if (! $practiceSession) {
+            return redirect()->route('study.new.prepare', $deck)
+                ->with('error', 'Không thể khởi tạo lượt luyện tập cho các từ vừa học.');
+        }
+
+        return redirect()->route('study.session.show', $practiceSession);
     }
 }
 
