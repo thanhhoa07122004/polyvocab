@@ -68,7 +68,7 @@ class StudyFlowAndModesTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Tiến độ & Chế độ học tập', false);
-        $response->assertSee('Học từ mới');
+        $response->assertSee('Học từ');
         $response->assertSee('Ôn đến hạn');
         $response->assertSee('Luyện theo dạng bài');
         $response->assertSee('Luyện từ khó');
@@ -338,5 +338,90 @@ class StudyFlowAndModesTest extends TestCase
             $this->assertNotEmpty($q['id']);
             $this->assertEquals($type, $q['exercise_type']);
         }
+    }
+
+    public function test_matching_pairs_deranges_terms_and_meanings_so_no_row_has_same_meaning(): void
+    {
+        $generator = app(QuestionGeneratorService::class);
+
+        // Tạo 4 từ vựng kèm nghĩa trong bộ từ
+        $entries = [
+            ['term' => 'Cat', 'meaning' => 'Con mèo'],
+            ['term' => 'Dog', 'meaning' => 'Con chó'],
+            ['term' => 'Bird', 'meaning' => 'Con chim'],
+            ['term' => 'Fish', 'meaning' => 'Con cá'],
+        ];
+
+        $meanings = [];
+        foreach ($entries as $e) {
+            $ent = VocabularyEntry::factory()->create(['deck_id' => $this->deck->id, 'term' => $e['term']]);
+            $meanings[] = EntryMeaning::factory()->create(['vocabulary_entry_id' => $ent->id, 'meaning' => $e['meaning']]);
+        }
+
+        $targetMeaning = $meanings[0];
+
+        // Chạy lặp lại 15 lần để kiểm chứng tính ngẫu nhiên nhưng bảo đảm 100% không bao giờ cùng hàng
+        for ($run = 0; $run < 15; $run++) {
+            $q = $generator->generateQuestion($targetMeaning, 'matching_pairs', $this->deck);
+
+            $this->assertArrayHasKey('shuffled_terms', $q);
+            $this->assertArrayHasKey('shuffled_meanings', $q);
+            $this->assertCount(4, $q['shuffled_terms']);
+            $this->assertCount(4, $q['shuffled_meanings']);
+
+            for ($i = 0; $i < count($q['shuffled_terms']); $i++) {
+                $this->assertNotEquals(
+                    $q['shuffled_terms'][$i]['id'],
+                    $q['shuffled_meanings'][$i]['id'],
+                    "Term và Meaning tại hàng {$i} không được phép trùng nhau (lần thử {$run})."
+                );
+            }
+        }
+    }
+
+    public function test_practice_index_prefers_deck_with_words_and_estimate_endpoint(): void
+    {
+        // Tạo 1 bộ từ rỗng xếp đầu theo thứ tự chữ cái
+        $emptyDeck = Deck::factory()->create([
+            'user_id' => $this->user->id,
+            'name' => 'AAA Empty Deck',
+            'learning_language_id' => $this->learningLang->id,
+            'meaning_language_id' => $this->meaningLang->id,
+            'visibility' => DeckVisibility::PRIVATE,
+        ]);
+
+        // Tạo 1 bộ từ có từ vựng
+        $filledDeck = Deck::factory()->create([
+            'user_id' => $this->user->id,
+            'name' => 'BBB Filled Deck',
+            'learning_language_id' => $this->learningLang->id,
+            'meaning_language_id' => $this->meaningLang->id,
+            'visibility' => DeckVisibility::PRIVATE,
+        ]);
+
+        for ($i = 1; $i <= 3; $i++) {
+            $ent = VocabularyEntry::factory()->create(['deck_id' => $filledDeck->id, 'term' => "Word {$i}"]);
+            EntryMeaning::factory()->create(['vocabulary_entry_id' => $ent->id, 'meaning' => "Nghia {$i}"]);
+        }
+
+        // 1. Vào trang practice index: Phải tự động chọn bộ từ có từ vựng thay vì bộ từ rỗng đầu danh sách
+        $response = $this->actingAs($this->user)->get(route('study.practice.index'));
+        $response->assertOk();
+        $response->assertViewHas('selectedDeckIds', [$filledDeck->id]);
+        $response->assertViewHas('availableMeaningsCount', 3);
+
+        // 2. Gọi endpoint estimate khi người dùng chọn/bỏ chọn bộ từ
+        $estimateResponse = $this->actingAs($this->user)->postJson(route('study.practice.estimate'), [
+            'deck_ids' => [$emptyDeck->id, $filledDeck->id],
+            'scope' => 'all',
+        ]);
+
+        $estimateResponse->assertOk();
+        $estimateResponse->assertJson([
+            'available_count' => 3,
+        ]);
+        $json = $estimateResponse->json();
+        $this->assertTrue($json['exercise_types']['flashcard']['is_eligible']);
+        $this->assertTrue($json['exercise_types']['multiple_choice_term_to_meaning']['is_eligible']);
     }
 }

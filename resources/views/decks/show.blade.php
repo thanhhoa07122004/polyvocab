@@ -229,7 +229,7 @@
 
             <!-- 4 nút chế độ học tập chính -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 pt-2">
-                <!-- 1. Học từ mới -->
+                <!-- 1. Học từ -->
                 @if ($studyStats['unstudied_count'] > 0)
                     <a href="{{ route('study.new.prepare', $deck) }}"
                        class="group rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4 hover:bg-emerald-50 hover:border-emerald-300 transition flex flex-col justify-between">
@@ -242,14 +242,32 @@
                                 </span>
                                 <span class="text-xs font-bold text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-full">{{ $studyStats['unstudied_count'] }} mới</span>
                             </div>
-                            <h3 class="font-bold text-sm text-slate-900 mt-3 group-hover:text-emerald-700 transition">Học từ mới</h3>
-                            <p class="text-xs text-slate-500 mt-1 leading-relaxed">Làm quen và ghi nhớ các từ mới trong bộ từ này.</p>
+                            <h3 class="font-bold text-sm text-slate-900 mt-3 group-hover:text-emerald-700 transition">Học từ</h3>
+                            <p class="text-xs text-slate-500 mt-1 leading-relaxed">Làm quen và ghi nhớ các từ trong bộ từ này.</p>
+                        </div>
+                        <span class="text-xs font-semibold text-emerald-600 mt-4 block">Bắt đầu học &rarr;</span>
+                    </a>
+                @elseif ($totalMeaningsCount > 0)
+                    {{-- Không nhất thiết phải là từ mới: Khi đã học hết từ mới, vẫn cho phép Học từ các từ trong bộ --}}
+                    <a href="{{ route('study.new.prepare', $deck) }}"
+                       class="group rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4 hover:bg-emerald-50 hover:border-emerald-300 transition flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <span class="p-2 rounded-xl bg-emerald-600 text-white">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                    </svg>
+                                </span>
+                                <span class="text-xs font-bold text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-full">{{ $totalMeaningsCount }} từ</span>
+                            </div>
+                            <h3 class="font-bold text-sm text-slate-900 mt-3 group-hover:text-emerald-700 transition">Học từ</h3>
+                            <p class="text-xs text-slate-500 mt-1 leading-relaxed">Học và làm quen các từ vựng trong bộ từ này.</p>
                         </div>
                         <span class="text-xs font-semibold text-emerald-600 mt-4 block">Bắt đầu học &rarr;</span>
                     </a>
                 @else
                     <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 opacity-75 flex flex-col justify-between cursor-not-allowed deck-mode-card-disabled"
-                         title="Đã học hết tất cả các từ trong bộ từ này!">
+                         title="Bộ từ này chưa có từ vựng nào.">
                         <div>
                             <div class="flex items-center justify-between">
                                 <span class="p-2 rounded-xl bg-slate-300 text-slate-600">
@@ -257,10 +275,10 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                                     </svg>
                                 </span>
-                                <span class="text-[11px] font-semibold text-slate-500 bg-slate-200 px-2 py-0.5 rounded-full">Đã học hết</span>
+                                <span class="text-[11px] font-semibold text-slate-500 bg-slate-200 px-2 py-0.5 rounded-full">Chưa có từ</span>
                             </div>
-                            <h3 class="font-bold text-sm text-slate-700 mt-3">Học từ mới</h3>
-                            <p class="text-xs text-slate-500 mt-1 leading-relaxed">Bạn đã làm quen tất cả các từ trong bộ này.</p>
+                            <h3 class="font-bold text-sm text-slate-700 mt-3">Học từ</h3>
+                            <p class="text-xs text-slate-500 mt-1 leading-relaxed">Hãy thêm từ vựng vào bộ từ trước khi bắt đầu học.</p>
                         </div>
                         <span class="text-xs text-slate-400 mt-4 block italic">Chưa có nghĩa mới</span>
                     </div>
@@ -389,13 +407,31 @@
     <!-- Khu vực danh sách từ vựng -->
     <div class="rounded-3xl border border-slate-200 bg-white p-6 md:p-8 shadow-sm space-y-6">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-100 pb-6">
-            <div>
+            <div class="space-y-1">
                 <h2 class="text-xl font-bold tracking-tight text-slate-900">
                     Danh sách từ vựng
                 </h2>
-                <p class="mt-0.5 text-xs text-slate-500">
-                    Tổng số: <strong class="font-semibold text-slate-700">{{ number_format($totalEntriesCount) }}</strong> từ vựng
-                </p>
+                <div class="flex flex-wrap items-center gap-3">
+                    <p class="text-xs text-slate-500">
+                        Tổng số: <strong class="font-semibold text-slate-700">{{ number_format($totalEntriesCount) }}</strong> từ vựng
+                    </p>
+                    @can('update', $deck)
+                        @if ($totalEntriesCount > 0)
+                            <button type="button"
+                                    id="btnGenerateAllAudio"
+                                    onclick="generateAllAudioForDeck()"
+                                    class="rounded-lg border border-indigo-200 bg-indigo-50/70 hover:bg-indigo-100 text-indigo-700 px-2.5 py-1 text-2xs font-semibold transition cursor-pointer flex items-center gap-1.5">
+                                <span id="genAllSpinner" class="hidden">
+                                    <svg class="h-3 w-3 animate-spin text-indigo-700" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                    </svg>
+                                </span>
+                                <span>⚡ Tạo phát âm Azure TTS cho cả bộ</span>
+                            </button>
+                        @endif
+                    @endcan
+                </div>
             </div>
 
             <!-- Tìm kiếm từ vựng trong bộ từ -->
@@ -445,6 +481,15 @@
                                           dir="{{ $deck->learningLanguage->direction }}">
                                         /{{ $entry->pronunciation }}/
                                     </span>
+                                @endif
+
+                                @if ($entry->hasAudio())
+                                    <button type="button"
+                                            onclick="playDeckAudio('{{ $entry->audio_url }}')"
+                                            title="Nghe phát âm"
+                                            class="inline-flex items-center text-xs text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 rounded-md px-1.5 py-0.5 font-medium transition cursor-pointer">
+                                        🔊
+                                    </button>
                                 @endif
 
                                 @php
@@ -570,3 +615,47 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    let currentDeckAudio = null;
+    function playDeckAudio(url) {
+        if (!url) return;
+        if (currentDeckAudio) {
+            currentDeckAudio.pause();
+            currentDeckAudio.currentTime = 0;
+        }
+        currentDeckAudio = new Audio(url);
+        currentDeckAudio.play().catch(e => console.warn('Lỗi phát âm thanh:', e));
+    }
+
+    async function generateAllAudioForDeck() {
+        if (!confirm('Bạn có muốn tạo phát âm Azure TTS tự động cho tất cả các từ trong bộ từ này chưa có âm thanh không?')) return;
+        const btn = document.getElementById('btnGenerateAllAudio');
+        const spinner = document.getElementById('genAllSpinner');
+        if (btn) btn.disabled = true;
+        if (spinner) spinner.classList.remove('hidden');
+
+        try {
+            const resp = await fetch('{{ route('decks.audio.generate_all', $deck) }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                }
+            });
+            const data = await resp.json();
+            alert(data.message);
+            if (data.success && data.generated_count > 0) {
+                window.location.reload();
+            }
+        } catch (e) {
+            alert('Có lỗi xảy ra khi tạo phát âm. Hãy thử lại sau.');
+        } finally {
+            if (btn) btn.disabled = false;
+            if (spinner) spinner.classList.add('hidden');
+        }
+    }
+</script>
+@endpush

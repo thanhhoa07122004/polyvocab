@@ -15,13 +15,15 @@ class QuestionGeneratorService
      * @param string $exerciseType
      * @param Deck $deck
      * @param Collection<int, EntryMeaning>|null $siblingMeanings Các nghĩa khác trong bộ để tạo phương án nhiễu
+     * @param array<string, mixed> $options
      * @return array<string, mixed>
      */
     public function generateQuestion(
         EntryMeaning $meaning,
         string $exerciseType,
         Deck $deck,
-        ?Collection $siblingMeanings = null
+        ?Collection $siblingMeanings = null,
+        array $options = []
     ): array {
         $entry = $meaning->vocabularyEntry;
         $examples = $meaning->examples;
@@ -38,6 +40,9 @@ class QuestionGeneratorService
                 ->get();
         }
 
+        $matchingPairs = ($exerciseType === 'matching_pairs') ? $this->buildMatchingPairs($meaning, $siblingMeanings) : [];
+        $derangedMatchingPairs = ($exerciseType === 'matching_pairs') ? $this->derangeMatchingPairs($matchingPairs) : ['terms' => [], 'meanings' => []];
+
         $base = [
             'id' => 'q_' . $meaning->id . '_' . uniqid(),
             'meaning_id' => $meaning->id,
@@ -53,8 +58,12 @@ class QuestionGeneratorService
             'flashcard' => array_merge($base, [
                 'type' => 'flashcard',
                 'prompt' => 'Lật thẻ để kiểm tra khả năng nhớ nghĩa:',
-                'front_text' => ($exerciseType === 'flashcard_meaning_to_term') ? $meaning->meaning : $entry->term,
-                'back_text' => ($exerciseType === 'flashcard_meaning_to_term') ? $entry->term : $meaning->meaning,
+                'front_text' => ($exerciseType === 'flashcard_meaning_to_term')
+                    ? ($meaning->meaning ?: ($entry->note ?: 'Chưa có mô tả ý nghĩa'))
+                    : $entry->term,
+                'back_text' => ($exerciseType === 'flashcard_meaning_to_term')
+                    ? $entry->term
+                    : ($meaning->meaning ?: ($entry->note ?: 'Chưa có mô tả ý nghĩa')),
                 'example_sentence' => $firstExample?->sentence,
                 'example_translation' => $firstExample?->translation,
                 'is_self_evaluated' => true,
@@ -69,14 +78,7 @@ class QuestionGeneratorService
                 'is_self_evaluated' => false,
             ]),
 
-            'fill_in_the_blank' => array_merge($base, [
-                'type' => 'fill_in_the_blank',
-                'prompt' => 'Điền từ vựng thích hợp vào chỗ trống trong câu:',
-                'cloze_sentence' => $this->buildClozeSentence($entry->term, $firstExample?->sentence),
-                'example_translation' => $firstExample?->translation,
-                'correct_answer' => $entry->term,
-                'is_self_evaluated' => false,
-            ]),
+            'fill_in_the_blank' => $this->buildFillInTheBlankQuestion($base, $meaning, $deck, $options),
 
             'type_the_word' => array_merge($base, [
                 'type' => 'type_the_word',
@@ -89,8 +91,7 @@ class QuestionGeneratorService
             'listen_and_type' => array_merge($base, [
                 'type' => 'listen_and_type',
                 'prompt' => 'Nghe phát âm và gõ lại đúng từ vựng:',
-                'audio_term' => $entry->term,
-                'audio_lang' => $deck->learningLanguage?->code ?? 'en',
+                'audio_url' => $entry->audio_url,
                 'correct_answer' => $entry->term,
                 'is_self_evaluated' => false,
                 'hide_term_text' => true,
@@ -99,8 +100,7 @@ class QuestionGeneratorService
             'listen_and_choose' => array_merge($base, [
                 'type' => 'listen_and_choose',
                 'prompt' => 'Nghe phát âm và chọn nghĩa chính xác:',
-                'audio_term' => $entry->term,
-                'audio_lang' => $deck->learningLanguage?->code ?? 'en',
+                'audio_url' => $entry->audio_url,
                 'options' => $this->buildMeaningOptions($meaning, $siblingMeanings),
                 'correct_id' => $meaning->id,
                 'correct_answer' => $meaning->meaning,
@@ -111,7 +111,9 @@ class QuestionGeneratorService
             'matching_pairs' => array_merge($base, [
                 'type' => 'matching_pairs',
                 'prompt' => 'Ghép từng từ ở cột trái với nghĩa tương ứng ở cột phải:',
-                'pairs' => $this->buildMatchingPairs($meaning, $siblingMeanings),
+                'pairs' => $matchingPairs,
+                'shuffled_terms' => $derangedMatchingPairs['terms'],
+                'shuffled_meanings' => $derangedMatchingPairs['meanings'],
                 'is_self_evaluated' => false,
             ]),
 
@@ -147,10 +149,23 @@ class QuestionGeneratorService
         unset($safe['correct_answer']);
         unset($safe['correct_id']);
         unset($safe['explanation']);
+        unset($safe['blank_answer']);
+        unset($safe['acceptable_variants']);
+        unset($safe['sentence_full']);
+
+        if (isset($safe['type']) && $safe['type'] === 'fill_in_the_blank') {
+            unset($safe['example_translation']);
+            unset($safe['cloze_translation']);
+        }
 
         if (! empty($safe['hide_term_text'])) {
             unset($safe['term']);
             unset($safe['pronunciation']);
+            unset($safe['audio_term']);
+        }
+
+        if (isset($safe['type']) && in_array($safe['type'], ['listen_and_choose', 'multiple_choice_term_to_meaning'], true)) {
+            unset($safe['meaning']);
         }
 
         if (isset($safe['options']) && is_array($safe['options'])) {
@@ -160,15 +175,16 @@ class QuestionGeneratorService
         }
 
         if (isset($safe['pairs']) && is_array($safe['pairs'])) {
-            // Đối với ghép cặp trong bài kiểm tra, trả về danh sách từ và danh sách nghĩa đã xáo trộn riêng biệt
+            // Đối với ghép cặp trong bài kiểm tra, trả về danh sách từ và danh sách nghĩa đã xáo trộn riêng biệt, không cùng hàng
+            $deranged = $this->derangeMatchingPairs($safe['pairs']);
             $terms = [];
             $meanings = [];
-            foreach ($safe['pairs'] as $p) {
+            foreach ($deranged['terms'] as $p) {
                 $terms[] = ['id' => $p['id'], 'text' => $p['term']];
+            }
+            foreach ($deranged['meanings'] as $p) {
                 $meanings[] = ['id' => $p['id'], 'text' => $p['meaning']];
             }
-            shuffle($terms);
-            shuffle($meanings);
             $safe['unmatched_terms'] = $terms;
             $safe['unmatched_meanings'] = $meanings;
             unset($safe['pairs']);
@@ -265,7 +281,46 @@ class QuestionGeneratorService
             ];
         }
 
-        // Dạng nhập text: type_the_word, listen_and_type, fill_in_the_blank, word_unscramble
+        if ($type === 'fill_in_the_blank') {
+            $correctAnswer = $question['blank_answer'] ?? ($question['correct_answer'] ?? '');
+            $acceptableVariants = (array) ($question['acceptable_variants'] ?? []);
+            $clozeFormat = $question['cloze_format'] ?? 'input';
+
+            $normalizedUser = $this->normalizeText((string) $userAnswer);
+            $normalizedCorrect = $this->normalizeText((string) $correctAnswer);
+
+            $isCorrect = false;
+            if ($clozeFormat === 'choice') {
+                $isCorrect = ($normalizedUser === $normalizedCorrect);
+            } else {
+                if ($normalizedUser === $normalizedCorrect) {
+                    $isCorrect = true;
+                } else {
+                    foreach ($acceptableVariants as $variant) {
+                        if ($this->normalizeText((string) $variant) === $normalizedUser) {
+                            $isCorrect = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return [
+                'is_correct' => $isCorrect,
+                'is_empty' => false,
+                'score' => $isCorrect ? 1.0 : 0.0,
+                'user_answer' => (string) $userAnswer,
+                'correct_answer' => $correctAnswer,
+                'sentence_full' => $question['sentence_full'] ?? null,
+                'example_translation' => $question['example_translation'] ?? null,
+                'explanation' => $question['explanation'] ?? null,
+                'feedback' => $isCorrect
+                    ? 'Chính xác! Bạn đã điền đúng từ vào câu.'
+                    : 'Chưa chính xác. Đáp án đúng là: ' . $correctAnswer,
+            ];
+        }
+
+        // Dạng nhập text: type_the_word, listen_and_type, word_unscramble
         $normalizedUser = $this->normalizeText((string) $userAnswer);
         $normalizedCorrect = $this->normalizeText((string) $correctAnswer);
         $isCorrect = ($normalizedUser === $normalizedCorrect);
@@ -281,13 +336,212 @@ class QuestionGeneratorService
     }
 
     /**
-     * Chuẩn hóa văn bản để so sánh chính tả linh hoạt (xóa khoảng trắng thừa, dấu câu viền, đưa về chữ thường).
+     * Chuẩn hóa văn bản để so sánh chính tả linh hoạt (Unicode NFC, xóa khoảng trắng thừa, dấu câu viền, đưa về chữ thường).
      */
     public function normalizeText(string $text): string
     {
+        if (class_exists(\Normalizer::class)) {
+            $text = \Normalizer::normalize($text, \Normalizer::FORM_C) ?: $text;
+        }
+
         $trimmed = trim(mb_strtolower($text, 'UTF-8'));
         // Loại bỏ dấu câu viền
         return trim($trimmed, " .,!?;:'\"-—()[]{}");
+    }
+
+    /**
+     * Tạo câu hỏi dạng Điền từ (Fill in the blank), hỗ trợ AI sinh câu hoặc câu ví dụ sẵn có.
+     *
+     * @param array<string, mixed> $base
+     * @param EntryMeaning $meaning
+     * @param Deck $deck
+     * @param array<string, mixed> $options
+     * @return array<string, mixed>
+     */
+    protected function buildFillInTheBlankQuestion(
+        array $base,
+        EntryMeaning $meaning,
+        Deck $deck,
+        array $options = []
+    ): array {
+        $entry = $meaning->vocabularyEntry;
+        $firstExample = $meaning->examples->first();
+        $useAiCloze = (bool) ($options['use_ai_cloze'] ?? false);
+        $aiService = app(\App\Services\Ai\AiSentenceService::class);
+
+        // Sử dụng AI nếu người dùng bật hoặc khi từ vựng chưa có câu ví dụ nào trong bộ từ
+        if (($useAiCloze || empty($firstExample?->sentence)) && $aiService->isConfigured()) {
+            $aiCloze = $aiService->getOrCreateCloze($meaning, $deck->learningLanguage, $deck->meaningLanguage);
+
+            if ($aiCloze) {
+                $fullTranslation = $aiCloze->translation ?: $meaning->meaning;
+                $clozeTranslation = $aiCloze->translation_with_blank ?: $this->buildClozeTranslation($fullTranslation, $meaning->meaning, $entry->term);
+
+                // Xác định format: trắc nghiệm (choice) hoặc nhập từ (input) theo tỉ lệ cấu hình
+                $choiceRatio = (float) config('polyvocab.ai_cloze.choice_ratio', 0.5);
+                $isChoice = (mt_rand(1, 100) / 100) <= $choiceRatio;
+
+                // Để tạo trắc nghiệm cần ít nhất 3 phương án nhiễu hợp lệ
+                $distractors = is_array($aiCloze->distractors) ? $aiCloze->distractors : [];
+                if ($isChoice && count($distractors) >= 3) {
+                    $choiceOptions = [];
+                    $choiceOptions[] = [
+                        'id' => 'opt_correct',
+                        'text' => $aiCloze->blank_answer,
+                        'is_correct' => true,
+                    ];
+
+                    foreach (array_slice($distractors, 0, 3) as $dIdx => $dist) {
+                        $choiceOptions[] = [
+                            'id' => 'opt_distractor_' . ($dIdx + 1),
+                            'text' => (string) $dist,
+                            'is_correct' => false,
+                        ];
+                    }
+
+                    shuffle($choiceOptions);
+
+                    return array_merge($base, [
+                        'type' => 'fill_in_the_blank',
+                        'cloze_format' => 'choice',
+                        'prompt' => 'Chọn từ thích hợp để điền vào chỗ trống trong câu:',
+                        'cloze_sentence' => $aiCloze->sentence_with_blank,
+                        'sentence_full' => $aiCloze->sentence_full,
+                        'blank_answer' => $aiCloze->blank_answer,
+                        'correct_answer' => $aiCloze->blank_answer,
+                        'acceptable_variants' => $aiCloze->acceptable_variants ?? [],
+                        'options' => $choiceOptions,
+                        'cloze_translation' => $clozeTranslation,
+                        'example_translation' => $fullTranslation,
+                        'explanation' => $aiCloze->explanation,
+                        'is_ai_generated' => true,
+                        'is_self_evaluated' => false,
+                    ]);
+                }
+
+                // Nếu không đủ điều kiện trắc nghiệm, chuyển sang kiểu nhập từ (input)
+                return array_merge($base, [
+                    'type' => 'fill_in_the_blank',
+                    'cloze_format' => 'input',
+                    'prompt' => 'Điền từ vựng thích hợp vào chỗ trống trong câu:',
+                    'cloze_sentence' => $aiCloze->sentence_with_blank,
+                    'sentence_full' => $aiCloze->sentence_full,
+                    'blank_answer' => $aiCloze->blank_answer,
+                    'correct_answer' => $aiCloze->blank_answer,
+                    'acceptable_variants' => $aiCloze->acceptable_variants ?? [],
+                    'cloze_translation' => $clozeTranslation,
+                    'example_translation' => $fullTranslation,
+                    'explanation' => $aiCloze->explanation,
+                    'is_ai_generated' => true,
+                    'is_self_evaluated' => false,
+                ]);
+            }
+        }
+
+        // Mặc định hoặc Fallback sang câu ví dụ có sẵn
+        $fallbackSentence = $firstExample?->sentence
+            ? $this->buildClozeSentence($entry->term, $firstExample->sentence)
+            : '[ ______ ]';
+        $fallbackFullTranslation = $firstExample?->translation ?: $meaning->meaning;
+        $fallbackClozeTranslation = $firstExample?->translation
+            ? $this->buildClozeTranslation($firstExample->translation, $meaning->meaning, $entry->term)
+            : '[ ______ ]';
+
+        return array_merge($base, [
+            'type' => 'fill_in_the_blank',
+            'cloze_format' => 'input',
+            'prompt' => 'Điền từ vựng thích hợp vào chỗ trống trong câu:',
+            'cloze_sentence' => $fallbackSentence,
+            'sentence_full' => $firstExample?->sentence ?: $entry->term,
+            'blank_answer' => $entry->term,
+            'correct_answer' => $entry->term,
+            'acceptable_variants' => [],
+            'cloze_translation' => $fallbackClozeTranslation,
+            'example_translation' => $fallbackFullTranslation,
+            'explanation' => $firstExample ? ($firstExample->sentence . ' (' . $firstExample->translation . ')') : $meaning->meaning,
+            'is_ai_generated' => false,
+            'is_self_evaluated' => false,
+        ]);
+    }
+
+    /**
+     * Tạo câu dịch có chỗ trống [ ______ ] từ câu dịch đầy đủ và nét nghĩa / từ vựng.
+     * Đảm bảo khi người học bấm Gợi ý, từ cần điền không bị lộ mà hiển thị dưới dạng khoảng trắng [ ______ ].
+     */
+    public function buildClozeTranslation(string $translation, string $meaningText, ?string $term = null): string
+    {
+        $blankMarker = '[ ______ ]';
+
+        // 1. Nếu bản dịch đã có sẵn chỗ trống [ ______ ] hoặc ______ thì chuẩn hóa
+        if (preg_match('/\[\s*_{3,}\s*\]|_{3,}/u', $translation)) {
+            return trim(preg_replace('/\s+/', ' ', preg_replace('/\[\s*_{3,}\s*\]|_{3,}/u', $blankMarker, $translation)));
+        }
+
+        // 2. Tìm và thay thế các cụm từ nghĩa trong câu dịch
+        $candidates = [];
+        $cleanMeaning = preg_replace('/\([^)]*\)/u', ' ', $meaningText);
+        $parts = preg_split('/[,;\/\n\r|]+/u', (string) $cleanMeaning);
+        if ($parts) {
+            foreach ($parts as $p) {
+                $trimmed = trim($p, " \t\n\r\0\x0B-—:.,");
+                if (mb_strlen($trimmed, 'UTF-8') >= 2) {
+                    $candidates[] = $trimmed;
+                }
+            }
+        }
+
+        // Thêm cả cụm nghĩa gốc nếu chưa có
+        $rawMeaningTrimmed = trim((string) preg_replace('/\([^)]*\)/u', ' ', $meaningText));
+        if (mb_strlen($rawMeaningTrimmed, 'UTF-8') >= 2 && ! in_array($rawMeaningTrimmed, $candidates, true)) {
+            $candidates[] = $rawMeaningTrimmed;
+        }
+
+        // Thêm term gốc (nếu bản dịch giữ nguyên từ gốc)
+        if ($term && mb_strlen($term, 'UTF-8') >= 2) {
+            $candidates[] = $term;
+        }
+
+        // Sắp xếp các cụm từ dài nhất lên trước để match ưu tiên cụm từ đầy đủ
+        usort($candidates, fn ($a, $b) => mb_strlen($b, 'UTF-8') <=> mb_strlen($a, 'UTF-8'));
+
+        $replaced = false;
+        $result = $translation;
+        foreach ($candidates as $candidate) {
+            $pattern = '/' . preg_quote($candidate, '/') . '/iu';
+            if (preg_match($pattern, $result)) {
+                $result = preg_replace($pattern, $blankMarker, $result, 1);
+                $replaced = true;
+                break;
+            }
+        }
+
+        // Nếu các cụm từ đầy đủ không match, thử tách thành các từ đơn có ý nghĩa
+        if (! $replaced) {
+            $words = preg_split('/\s+/u', (string) $cleanMeaning);
+            $meaningWords = [];
+            if ($words) {
+                foreach ($words as $w) {
+                    $w = trim($w, " \t\n\r\0\x0B-—:.,");
+                    if (mb_strlen($w, 'UTF-8') >= 2) {
+                        $meaningWords[] = $w;
+                    }
+                }
+            }
+            usort($meaningWords, fn ($a, $b) => mb_strlen($b, 'UTF-8') <=> mb_strlen($a, 'UTF-8'));
+            foreach ($meaningWords as $mw) {
+                if (in_array(mb_strtolower($mw, 'UTF-8'), ['của', 'trong', 'cho', 'với', 'được', 'một', 'những', 'các', 'là', 'và', 'có'], true)) {
+                    continue;
+                }
+                $pattern = '/' . preg_quote($mw, '/') . '/iu';
+                if (preg_match($pattern, $result)) {
+                    $result = preg_replace($pattern, $blankMarker, $result, 1);
+                    $replaced = true;
+                    break;
+                }
+            }
+        }
+
+        return trim(preg_replace('/\s+/', ' ', $result));
     }
 
     protected function buildClozeSentence(string $term, ?string $sentence): string
@@ -362,6 +616,60 @@ class QuestionGeneratorService
 
         shuffle($pairs);
         return $pairs;
+    }
+
+    /**
+     * Tạo 2 danh sách từ và nghĩa xáo trộn riêng biệt, bảo đảm các cặp cùng nghĩa KHÔNG nằm chung một hàng.
+     *
+     * @param array<int, array{id: int|string, term: string, meaning: string}> $pairs
+     * @return array{terms: array<int, array{id: int|string, term: string, meaning: string}>, meanings: array<int, array{id: int|string, term: string, meaning: string}>}
+     */
+    public function derangeMatchingPairs(array $pairs): array
+    {
+        $terms = $pairs;
+        shuffle($terms);
+
+        $meanings = $pairs;
+        shuffle($meanings);
+
+        $n = count($pairs);
+        if ($n > 1) {
+            // Cố gắng xáo trộn ngẫu nhiên tối đa 30 lần để tìm hoán vị không có điểm cố định trùng hàng (derangement)
+            $foundDerangement = false;
+            for ($attempt = 0; $attempt < 30; $attempt++) {
+                $hasSameRow = false;
+                for ($i = 0; $i < $n; $i++) {
+                    if ($terms[$i]['id'] === $meanings[$i]['id']) {
+                        $hasSameRow = true;
+                        break;
+                    }
+                }
+                if (! $hasSameRow) {
+                    $foundDerangement = true;
+                    break;
+                }
+                shuffle($meanings);
+            }
+
+            // Nếu sau 30 lần vẫn còn phần tử trùng hàng, áp dụng dịch chuyển xoay vòng bảo đảm 100% không cùng hàng
+            if (! $foundDerangement) {
+                $meaningsById = [];
+                foreach ($pairs as $p) {
+                    $meaningsById[$p['id']] = $p;
+                }
+                $shiftedMeanings = [];
+                for ($i = 0; $i < $n; $i++) {
+                    $nextTermId = $terms[($i + 1) % $n]['id'];
+                    $shiftedMeanings[] = $meaningsById[$nextTermId];
+                }
+                $meanings = $shiftedMeanings;
+            }
+        }
+
+        return [
+            'terms' => $terms,
+            'meanings' => $meanings,
+        ];
     }
 
     protected function buildScrambledTiles(string $term): array

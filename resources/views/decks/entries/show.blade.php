@@ -39,14 +39,62 @@
                     {{ $entry->term }}
                 </h1>
 
-                <!-- Phiên âm -->
-                @if ($entry->pronunciation)
-                    <div class="mt-2 text-base font-mono text-indigo-600"
-                         lang="{{ $deck->learningLanguage->code }}"
-                         dir="{{ $deck->learningLanguage->direction }}">
-                        /{{ $entry->pronunciation }}/
+                <!-- Phiên âm & Phát âm -->
+                <div class="mt-2 flex flex-wrap items-center gap-3">
+                    @if ($entry->pronunciation)
+                        <div class="text-base font-mono text-indigo-600"
+                             lang="{{ $deck->learningLanguage->code }}"
+                             dir="{{ $deck->learningLanguage->direction }}">
+                            /{{ $entry->pronunciation }}/
+                        </div>
+                    @endif
+
+                    <!-- Nút phát âm thanh -->
+                    <div id="audioPlayContainer" class="{{ $entry->hasAudio() ? '' : 'hidden' }}">
+                        <button type="button"
+                                id="btnPlayAudio"
+                                onclick="playAudio('{{ $entry->audio_url }}')"
+                                class="inline-flex items-center space-x-1.5 rounded-full bg-indigo-50 border border-indigo-200/80 px-3 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 transition cursor-pointer">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                            </svg>
+                            <span>Nghe phát âm</span>
+                        </button>
                     </div>
-                @endif
+                </div>
+
+                <!-- Khu vực Quản lý Audio cho người biên soạn -->
+                @can('update', $deck)
+                    <div class="mt-4 pt-3 border-t border-slate-100 space-y-2">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button type="button"
+                                    id="btnGenerateAudio"
+                                    onclick="generateAudio(false)"
+                                    class="inline-flex items-center space-x-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 transition cursor-pointer">
+                                <span id="generateSpinner" class="hidden">
+                                    <svg class="h-3.5 w-3.5 animate-spin text-slate-700" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                    </svg>
+                                </span>
+                                <span id="generateBtnText">{{ $entry->hasAudio() ? 'Tạo lại phát âm (TTS)' : 'Tạo phát âm (TTS)' }}</span>
+                            </button>
+
+                            @if ($entry->hasAudio())
+                                <span id="audioMetadataBadge" class="inline-flex items-center rounded-lg bg-emerald-50 border border-emerald-200 px-2.5 py-1 text-2xs font-medium text-emerald-800">
+                                    ✓ Đã có âm thanh ({{ $entry->audio_source === 'manual' ? 'Thủ công' : ($entry->audio_voice ?? 'Azure TTS') }})
+                                </span>
+                            @else
+                                <span id="audioMetadataBadge" class="inline-flex items-center rounded-lg bg-slate-50 border border-slate-200 px-2.5 py-1 text-2xs font-medium text-slate-500">
+                                    Chưa có âm thanh
+                                </span>
+                            @endif
+                        </div>
+
+                        <!-- Thông báo trạng thái tạo audio -->
+                        <div id="audioNotice" class="hidden text-xs font-medium"></div>
+                    </div>
+                @endcan
             </div>
 
             <!-- Nút thao tác của chủ sở hữu -->
@@ -149,4 +197,86 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    let currentAudio = null;
+
+    function playAudio(url) {
+        if (!url) return;
+        if (currentAudio) {
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+        }
+        currentAudio = new Audio(url);
+        currentAudio.play().catch(e => console.warn('Lỗi phát âm thanh:', e));
+    }
+
+    async function generateAudio(force = false) {
+        const btn = document.getElementById('btnGenerateAudio');
+        const spinner = document.getElementById('generateSpinner');
+        const btnText = document.getElementById('generateBtnText');
+        const notice = document.getElementById('audioNotice');
+        const badge = document.getElementById('audioMetadataBadge');
+        const playContainer = document.getElementById('audioPlayContainer');
+        const playBtn = document.getElementById('btnPlayAudio');
+
+        if (!btn) return;
+
+        btn.disabled = true;
+        if (spinner) spinner.classList.remove('hidden');
+        if (notice) {
+            notice.className = 'text-xs font-medium text-indigo-600 block';
+            notice.innerText = 'Đang tạo âm thanh…';
+        }
+
+        try {
+            const resp = await fetch('{{ route('audio.entries.generate', $entry) }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ force: force })
+            });
+
+            const data = await resp.json();
+
+            if (data.status === 'manual_audio_preserved') {
+                if (confirm(data.message + ' Bạn có muốn ghi đè bằng giọng Azure TTS không?')) {
+                    return generateAudio(true);
+                } else {
+                    notice.className = 'text-xs font-medium text-slate-500 block';
+                    notice.innerText = 'Đã giữ nguyên tệp âm thanh thủ công.';
+                }
+            } else if (data.success) {
+                notice.className = 'text-xs font-medium text-emerald-600 block';
+                notice.innerText = 'Đã tạo âm thanh.';
+                btnText.innerText = 'Tạo lại phát âm (TTS)';
+
+                if (badge) {
+                    badge.className = 'inline-flex items-center rounded-lg bg-emerald-50 border border-emerald-200 px-2.5 py-1 text-2xs font-medium text-emerald-800';
+                    badge.innerText = '✓ Đã có âm thanh';
+                }
+
+                if (data.url) {
+                    playContainer.classList.remove('hidden');
+                    playBtn.onclick = () => playAudio(data.url);
+                    playAudio(data.url);
+                }
+            } else {
+                notice.className = 'text-xs font-medium text-rose-600 block';
+                notice.innerText = data.message || 'Chưa tạo được âm thanh. Hãy thử lại sau.';
+            }
+        } catch (e) {
+            notice.className = 'text-xs font-medium text-rose-600 block';
+            notice.innerText = 'Chưa tạo được âm thanh. Hãy thử lại sau.';
+        } finally {
+            btn.disabled = false;
+            if (spinner) spinner.classList.add('hidden');
+        }
+    }
+</script>
+@endpush
 

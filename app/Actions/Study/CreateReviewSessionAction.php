@@ -27,7 +27,8 @@ class CreateReviewSessionAction
         ?int $languageId = null,
         int $requestedCount = 10,
         bool $isExtraPractice = false,
-        array $selectedExerciseTypes = []
+        array $selectedExerciseTypes = [],
+        bool $useAiCloze = false
     ): ?StudySession {
         $chunkSize = (int) config('polyvocab.study.chunk_size', 5);
         $minBatch = (int) config('polyvocab.study.min_batch_size', 1);
@@ -57,7 +58,7 @@ class CreateReviewSessionAction
         // Chọn deck_id đại diện (deck của mục đầu tiên)
         $primaryDeckId = $meanings->first()->vocabularyEntry->deck_id;
 
-        return DB::transaction(function () use ($user, $primaryDeckId, $meanings, $chunkSize, $isExtraPractice, $selectedExerciseTypes, $deckIds) {
+        return DB::transaction(function () use ($user, $primaryDeckId, $meanings, $chunkSize, $isExtraPractice, $selectedExerciseTypes, $deckIds, $useAiCloze) {
             $session = StudySession::create([
                 'user_id' => $user->id,
                 'deck_id' => $primaryDeckId,
@@ -69,6 +70,7 @@ class CreateReviewSessionAction
                 'settings' => [
                     'is_extra_practice' => $isExtraPractice,
                     'exercise_types' => $selectedExerciseTypes,
+                    'use_ai_cloze' => $useAiCloze,
                     'selected_deck_ids' => $deckIds,
                     'total_target' => $meanings->count(),
                     'finalized_meanings' => [],

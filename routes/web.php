@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\LanguageController as AdminLanguageController;
+use App\Http\Controllers\AudioController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\DashboardController;
@@ -28,6 +29,11 @@ Route::get('/decks/{deck}', [DeckController::class, 'show'])->name('decks.show')
 Route::get('/decks/{deck}/entries/{entry}', [VocabularyEntryController::class, 'show'])
     ->name('decks.entries.show')
     ->whereNumber(['deck', 'entry']);
+
+// Phát âm thanh mục từ vựng (kiểm tra quyền truy cập công khai/riêng tư)
+Route::get('/audio/entries/{entry}', [AudioController::class, 'play'])
+    ->name('audio.entries.play')
+    ->whereNumber('entry');
 
 Route::middleware('guest')->group(function () {
     Route::get('/register', [RegisterController::class, 'create'])->name('register');
@@ -67,6 +73,17 @@ Route::middleware('auth')->group(function () {
         ->name('decks.entries.destroy')
         ->whereNumber(['deck', 'entry']);
 
+    // Quản lý và tạo phát âm Azure TTS
+    Route::post('/audio/entries/{entry}/generate', [AudioController::class, 'generate'])
+        ->name('audio.entries.generate')
+        ->whereNumber('entry');
+    Route::get('/audio/entries/{entry}/status', [AudioController::class, 'status'])
+        ->name('audio.entries.status')
+        ->whereNumber('entry');
+    Route::post('/decks/{deck}/audio/generate-all', [AudioController::class, 'generateAllForDeck'])
+        ->name('decks.audio.generate_all')
+        ->whereNumber('deck');
+
     // Chế độ Học tập & Luyện nhớ
     // 1. Học từ mới
     Route::get('/study/new', [LearnNewController::class, 'selectDeck'])->name('study.new.select');
@@ -83,6 +100,7 @@ Route::middleware('auth')->group(function () {
 
     // 3. Luyện theo dạng bài & Luyện từ khó (Practice)
     Route::get('/study/practice', [PracticeController::class, 'index'])->name('study.practice.index');
+    Route::post('/study/practice/estimate', [PracticeController::class, 'estimate'])->name('study.practice.estimate');
     Route::get('/decks/{deck}/study/practice', [PracticeController::class, 'prepareDeck'])
         ->name('study.practice.deck')
         ->whereNumber('deck');

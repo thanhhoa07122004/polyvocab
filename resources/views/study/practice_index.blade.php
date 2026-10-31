@@ -108,8 +108,7 @@
                         @php
                             $isSelected = in_array($d->id, $selectedDeckIds, true);
                         @endphp
-                        <label class="relative flex flex-col justify-between rounded-2xl border p-4 cursor-pointer transition select-none
-                            {{ $isSelected ? 'border-indigo-600 bg-indigo-50/40 ring-1 ring-indigo-600 selected-item-card' : 'border-slate-200 hover:border-slate-300 bg-white' }}">
+                        <label class="selectable-card relative flex flex-col justify-between rounded-2xl border border-slate-200 hover:border-slate-300 bg-white p-4 cursor-pointer transition select-none has-checked:border-indigo-600 has-checked:bg-indigo-50/40 has-checked:ring-1 has-checked:ring-indigo-600">
                             <div class="flex items-start justify-between">
                                 <span class="font-bold text-sm text-slate-900 leading-snug">{{ $d->name }}</span>
                                 <input type="checkbox" name="deck_ids[]" value="{{ $d->id }}"
@@ -136,8 +135,7 @@
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <label class="relative flex items-start space-x-3 rounded-2xl border p-4 cursor-pointer transition
-                    {{ $scope === 'all' ? 'border-indigo-600 bg-indigo-50/40 ring-1 ring-indigo-600 selected-item-card' : 'border-slate-200 hover:border-slate-300 bg-white' }}">
+                <label class="selectable-card relative flex items-start space-x-3 rounded-2xl border border-slate-200 hover:border-slate-300 bg-white p-4 cursor-pointer transition has-checked:border-indigo-600 has-checked:bg-indigo-50/40 has-checked:ring-1 has-checked:ring-indigo-600">
                     <input type="radio" name="scope" value="all" {{ $scope === 'all' ? 'checked' : '' }}
                            class="mt-1 text-indigo-600 focus:ring-indigo-500">
                     <div>
@@ -146,8 +144,7 @@
                     </div>
                 </label>
 
-                <label class="relative flex items-start space-x-3 rounded-2xl border p-4 cursor-pointer transition
-                    {{ $scope === 'difficult' ? 'border-amber-600 bg-amber-50/40 ring-1 ring-amber-600 selected-item-card' : 'border-slate-200 hover:border-slate-300 bg-white' }}">
+                <label class="selectable-card-amber relative flex items-start space-x-3 rounded-2xl border border-slate-200 hover:border-slate-300 bg-white p-4 cursor-pointer transition has-checked:border-amber-500 has-checked:bg-amber-50/40 has-checked:ring-1 has-checked:ring-amber-500">
                     <input type="radio" name="scope" value="difficult" {{ $scope === 'difficult' ? 'checked' : '' }}
                            class="mt-1 text-amber-600 focus:ring-amber-500">
                     <div>
@@ -159,8 +156,7 @@
                     </div>
                 </label>
 
-                <label class="relative flex items-start space-x-3 rounded-2xl border p-4 cursor-pointer transition
-                    {{ $scope === 'studied' ? 'border-indigo-600 bg-indigo-50/40 ring-1 ring-indigo-600 selected-item-card' : 'border-slate-200 hover:border-slate-300 bg-white' }}">
+                <label class="selectable-card relative flex items-start space-x-3 rounded-2xl border border-slate-200 hover:border-slate-300 bg-white p-4 cursor-pointer transition has-checked:border-indigo-600 has-checked:bg-indigo-50/40 has-checked:ring-1 has-checked:ring-indigo-600">
                     <input type="radio" name="scope" value="studied" {{ $scope === 'studied' ? 'checked' : '' }}
                            class="mt-1 text-indigo-600 focus:ring-indigo-500">
                     <div>
@@ -169,8 +165,7 @@
                     </div>
                 </label>
 
-                <label class="relative flex items-start space-x-3 rounded-2xl border p-4 cursor-pointer transition
-                    {{ $scope === 'unstudied' ? 'border-indigo-600 bg-indigo-50/40 ring-1 ring-indigo-600 selected-item-card' : 'border-slate-200 hover:border-slate-300 bg-white' }}">
+                <label class="selectable-card relative flex items-start space-x-3 rounded-2xl border border-slate-200 hover:border-slate-300 bg-white p-4 cursor-pointer transition has-checked:border-indigo-600 has-checked:bg-indigo-50/40 has-checked:ring-1 has-checked:ring-indigo-600">
                     <input type="radio" name="scope" value="unstudied" {{ $scope === 'unstudied' ? 'checked' : '' }}
                            class="mt-1 text-indigo-600 focus:ring-indigo-500">
                     <div>
@@ -187,7 +182,7 @@
                 <div>
                     <h2 class="text-lg font-bold text-slate-900">3. Số lượng từ muốn luyện</h2>
                     <p class="mt-1 text-xs text-slate-500">
-                        Ước tính có: <strong>{{ number_format($availableMeaningsCount) }} từ</strong> trong phạm vi đã chọn.
+                        Ước tính có: <strong id="estimateWordsCount">{{ number_format($availableMeaningsCount) }} từ</strong> trong phạm vi đã chọn.
                     </p>
                 </div>
             </div>
@@ -230,23 +225,64 @@
                     @php
                         $isEligible = $ex['is_eligible'];
                     @endphp
-                    <label class="relative flex items-start space-x-3 rounded-2xl border p-4 transition
-                        {{ $isEligible ? 'border-slate-200 hover:border-slate-300 bg-white cursor-pointer exercise-card-eligible' : 'border-slate-200/50 bg-slate-100/60 cursor-not-allowed exercise-card-disabled' }}">
-                        <input type="checkbox" name="exercise_types[]" value="{{ $key }}"
+                    <label id="exerciseCard_{{ $key }}" class="relative flex items-start space-x-3 rounded-2xl border p-4 transition
+                        {{ $isEligible ? 'border-slate-200 hover:border-slate-300 bg-white cursor-pointer exercise-card-eligible has-checked:border-indigo-600 has-checked:bg-indigo-50/30 has-checked:ring-1 has-checked:ring-indigo-600' : 'border-slate-200/50 bg-slate-100/60 cursor-not-allowed exercise-card-disabled' }}">
+                        <input type="checkbox" id="exerciseCheckbox_{{ $key }}" name="exercise_types[]" value="{{ $key }}"
                                {{ $isEligible && in_array($key, ['flashcard', 'multiple_choice_term_to_meaning'], true) ? 'checked' : '' }}
                                {{ ! $isEligible ? 'disabled' : '' }}
                                class="mt-1 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4">
                         <div class="flex-1 text-xs">
-                            <span class="block font-bold text-sm text-slate-900 {{ ! $isEligible ? 'opacity-85' : '' }}">{{ $ex['name'] }}</span>
-                            <span class="block text-slate-600 mt-0.5 {{ ! $isEligible ? 'opacity-85' : '' }}">{{ $ex['description'] }}</span>
+                            <span id="exerciseTitle_{{ $key }}" class="block font-bold text-sm text-slate-900 {{ ! $isEligible ? 'opacity-85' : '' }}">{{ $ex['name'] }}</span>
+                            <span id="exerciseDesc_{{ $key }}" class="block text-slate-600 mt-0.5 {{ ! $isEligible ? 'opacity-85' : '' }}">{{ $ex['description'] }}</span>
                             @if (! empty($ex['example']))
                                 <span class="block font-mono text-slate-400 mt-1 text-[11px] {{ ! $isEligible ? 'opacity-75' : '' }}">{{ $ex['example'] }}</span>
                             @endif
-                            @if (! $isEligible)
-                                <span class="inline-flex items-center gap-1 mt-2 font-medium text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-0.5 rounded-lg text-[11px] exercise-disabled-badge">
-                                    <span class="text-xs">ℹ</span>
-                                    <span>{{ $ex['disabled_reason'] }}</span>
-                                </span>
+                            @if (! empty($ex['requires_audio']))
+                                @if (! empty($ex['has_server_audio']))
+                                    <span class="inline-flex items-center gap-1 mt-1.5 font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md text-[11px]">
+                                        <span>✓ Đã có phát âm Azure TTS</span>
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1 mt-1.5 font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md text-[11px]">
+                                        <span>🔊 Giọng đọc trình duyệt</span>
+                                    </span>
+                                @endif
+                            @endif
+                            <span id="exerciseReason_{{ $key }}" class="{{ ! $isEligible ? '' : 'hidden' }} inline-flex items-center gap-1 mt-2 font-medium text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-0.5 rounded-lg text-[11px] exercise-disabled-badge">
+                                <span class="text-xs">ℹ</span>
+                                <span class="reason-text">{{ $ex['disabled_reason'] ?? '' }}</span>
+                            </span>
+
+                            @if ($key === 'fill_in_the_blank')
+                                @php
+                                    $isAiConfigured = app(\App\Services\Ai\AiSentenceService::class)->isConfigured();
+                                @endphp
+                                <div class="mt-3 pt-2.5 border-t border-slate-200/80" onclick="event.stopPropagation()">
+                                    <label class="flex items-start gap-2 cursor-pointer select-none">
+                                        <input type="checkbox"
+                                               name="use_ai_cloze"
+                                               id="useAiClozeCheckbox"
+                                               value="1"
+                                               {{ ! $isAiConfigured || ! $isEligible ? 'disabled' : '' }}
+                                               class="mt-0.5 rounded border-slate-300 text-purple-600 focus:ring-purple-500 h-4 w-4 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <div class="text-xs">
+                                            <div class="flex items-center gap-1.5 font-bold text-slate-800">
+                                                <span>✨ Dùng AI đặt câu</span>
+                                                @if (! $isAiConfigured)
+                                                    <span class="rounded-full bg-slate-100 text-slate-500 border border-slate-200 text-[10px] px-2 py-0.2 font-semibold">Chưa thiết lập AI</span>
+                                                @else
+                                                    <span class="rounded-full bg-purple-100 text-purple-700 text-[10px] px-2 py-0.2 font-bold">Mới</span>
+                                                @endif
+                                            </div>
+                                            <div class="text-slate-500 mt-0.5 text-[11px] leading-relaxed">
+                                                Tạo câu mới theo từ đang luyện. Cách trả lời sẽ thay đổi giữa nhập từ và chọn đáp án.
+                                            </div>
+                                            <div class="text-slate-400 mt-0.5 text-[10px] italic">
+                                                Nội dung từ vựng được gửi đến dịch vụ AI để tạo câu.
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
                             @endif
                         </div>
                     </label>
@@ -266,5 +302,113 @@
         </div>
     </form>
 </div>
+
+<script>
+    function updatePracticeEstimates() {
+        const checkedDeckBoxes = document.querySelectorAll('input[name="deck_ids[]"]:checked');
+        const deckIds = Array.from(checkedDeckBoxes).map(cb => cb.value);
+        const scopeRadio = document.querySelector('input[name="scope"]:checked');
+        const scope = scopeRadio ? scopeRadio.value : 'all';
+
+        const estimateTextEl = document.getElementById('estimateWordsCount');
+        if (estimateTextEl) estimateTextEl.innerText = 'Đang tính...';
+
+        fetch('{{ route('study.practice.estimate') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ deck_ids: deckIds, scope: scope })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (estimateTextEl) {
+                estimateTextEl.innerText = `${(data.available_count || 0).toLocaleString()} từ`;
+            }
+
+            const exercises = data.exercise_types || {};
+            for (const [key, ex] of Object.entries(exercises)) {
+                const card = document.getElementById(`exerciseCard_${key}`);
+                const checkbox = document.getElementById(`exerciseCheckbox_${key}`);
+                const reasonBadge = document.getElementById(`exerciseReason_${key}`);
+                const title = document.getElementById(`exerciseTitle_${key}`);
+                const desc = document.getElementById(`exerciseDesc_${key}`);
+
+                if (!card || !checkbox) continue;
+
+                if (ex.is_eligible) {
+                    checkbox.disabled = false;
+                    card.classList.remove('border-slate-200/50', 'bg-slate-100/60', 'cursor-not-allowed', 'exercise-card-disabled');
+                    card.classList.add('border-slate-200', 'hover:border-slate-300', 'bg-white', 'cursor-pointer', 'exercise-card-eligible', 'has-checked:border-indigo-600', 'has-checked:bg-indigo-50/30', 'has-checked:ring-1', 'has-checked:ring-indigo-600');
+                    if (title) title.classList.remove('opacity-85');
+                    if (desc) desc.classList.remove('opacity-85');
+                    if (reasonBadge) reasonBadge.classList.add('hidden');
+                } else {
+                    checkbox.checked = false;
+                    checkbox.disabled = true;
+                    card.classList.remove('border-slate-200', 'hover:border-slate-300', 'bg-white', 'cursor-pointer', 'exercise-card-eligible', 'has-checked:border-indigo-600', 'has-checked:bg-indigo-50/30', 'has-checked:ring-1', 'has-checked:ring-indigo-600');
+                    card.classList.add('border-slate-200/50', 'bg-slate-100/60', 'cursor-not-allowed', 'exercise-card-disabled');
+                    if (title) title.classList.add('opacity-85');
+                    if (desc) desc.classList.add('opacity-85');
+                    if (reasonBadge) {
+                        reasonBadge.classList.remove('hidden');
+                        const reasonText = reasonBadge.querySelector('.reason-text');
+                        if (reasonText) reasonText.innerText = ex.disabled_reason || 'Không đủ điều kiện';
+                    }
+                }
+            }
+
+            // Tự động tích chọn dạng bài nếu chưa có dạng bài nào được chọn
+            const anyChecked = document.querySelector('input[name="exercise_types[]"]:checked');
+            if (!anyChecked) {
+                const flashcardCb = document.getElementById('exerciseCheckbox_flashcard');
+                const mcCb = document.getElementById('exerciseCheckbox_multiple_choice_term_to_meaning');
+                if (flashcardCb && !flashcardCb.disabled) flashcardCb.checked = true;
+                if (mcCb && !mcCb.disabled) mcCb.checked = true;
+                if (!flashcardCb?.checked && !mcCb?.checked) {
+                    const firstEligible = document.querySelector('input[name="exercise_types[]"]:not(:disabled)');
+                    if (firstEligible) firstEligible.checked = true;
+                }
+            }
+
+            syncAiClozeState();
+        })
+        .catch(err => {
+            console.error('Lỗi khi tính toán số từ:', err);
+        });
+    }
+
+    function syncAiClozeState() {
+        const fillInTheBlankCheckbox = document.getElementById('exerciseCheckbox_fill_in_the_blank');
+        const aiClozeCheckbox = document.getElementById('useAiClozeCheckbox');
+        const isAiConfigured = {{ app(\App\Services\Ai\AiSentenceService::class)->isConfigured() ? 'true' : 'false' }};
+
+        if (!aiClozeCheckbox) return;
+
+        if (!fillInTheBlankCheckbox || !fillInTheBlankCheckbox.checked || fillInTheBlankCheckbox.disabled || !isAiConfigured) {
+            aiClozeCheckbox.checked = false;
+            aiClozeCheckbox.disabled = true;
+        } else {
+            aiClozeCheckbox.disabled = false;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('input[name="deck_ids[]"]').forEach(cb => {
+            cb.addEventListener('change', updatePracticeEstimates);
+        });
+        document.querySelectorAll('input[name="scope"]').forEach(rb => {
+            rb.addEventListener('change', updatePracticeEstimates);
+        });
+
+        const fillInTheBlankCheckbox = document.getElementById('exerciseCheckbox_fill_in_the_blank');
+        if (fillInTheBlankCheckbox) {
+            fillInTheBlankCheckbox.addEventListener('change', syncAiClozeState);
+        }
+        syncAiClozeState();
+    });
+</script>
 @endsection
 

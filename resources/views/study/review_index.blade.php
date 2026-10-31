@@ -163,7 +163,64 @@
                 </div>
             </div>
 
-            <!-- 3. Tùy chọn Luyện thêm ngoài lịch -->
+            <!-- 3. Tùy chọn dạng bài tập & AI -->
+            @php
+                $isAiConfigured = app(\App\Services\Ai\AiSentenceService::class)->isConfigured();
+            @endphp
+            <div class="rounded-2xl bg-slate-50 p-4 border border-slate-200/70 space-y-3">
+                <div class="flex items-center justify-between cursor-pointer" onclick="document.getElementById('reviewExerciseSection').classList.toggle('hidden')">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-700">Dạng bài ôn tập & Tùy chọn AI (Mặc định kết hợp)</span>
+                    <span class="text-xs text-amber-600 font-semibold select-none">Tùy chỉnh ▾</span>
+                </div>
+                <div id="reviewExerciseSection" class="space-y-3 pt-2 border-t border-slate-200/60">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                        @foreach ($exercises as $key => $ex)
+                            <label class="flex items-start space-x-2.5 p-2.5 rounded-xl bg-white border border-slate-200 hover:border-slate-300 cursor-pointer">
+                                <input type="checkbox"
+                                       id="reviewExercise_{{ $key }}"
+                                       name="exercise_types[]"
+                                       value="{{ $key }}"
+                                       {{ in_array($key, ['flashcard', 'multiple_choice_term_to_meaning'], true) ? 'checked' : '' }}
+                                       class="mt-0.5 h-4 w-4 rounded-md border-slate-300 text-amber-600 focus:ring-amber-500">
+                                <div>
+                                    <span class="font-bold text-slate-800">{{ $ex['name'] }}</span>
+                                    <p class="text-slate-500 text-[11px] mt-0.5">{{ $ex['description'] }}</p>
+                                </div>
+                            </label>
+                        @endforeach
+                    </div>
+
+                    <!-- Tùy chọn AI đặt câu -->
+                    <div class="pt-2.5 border-t border-slate-200/60">
+                        <label class="flex items-start space-x-2.5 cursor-pointer select-none">
+                            <input type="checkbox"
+                                   id="reviewUseAiCloze"
+                                   name="use_ai_cloze"
+                                   value="1"
+                                   {{ ! $isAiConfigured ? 'disabled' : '' }}
+                                   class="mt-0.5 h-4 w-4 rounded-md border-slate-300 text-purple-600 focus:ring-purple-500 disabled:opacity-50">
+                            <div class="text-xs">
+                                <div class="flex items-center gap-1.5 font-bold text-slate-800">
+                                    <span>✨ Dùng AI đặt câu</span>
+                                    @if (! $isAiConfigured)
+                                        <span class="rounded-full bg-slate-100 text-slate-500 border border-slate-200 text-[10px] px-2 py-0.2 font-semibold">Chưa thiết lập AI</span>
+                                    @else
+                                        <span class="rounded-full bg-purple-100 text-purple-700 text-[10px] px-2 py-0.2 font-bold">Mới</span>
+                                    @endif
+                                </div>
+                                <p class="text-slate-500 mt-0.5 text-[11px]">
+                                    Tạo câu mới theo từ đang luyện. Cách trả lời sẽ thay đổi giữa nhập từ và chọn đáp án.
+                                </p>
+                                <p class="text-slate-400 mt-0.5 text-[10px] italic">
+                                    Nội dung từ vựng được gửi đến dịch vụ AI để tạo câu.
+                                </p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Tùy chọn Luyện thêm ngoài lịch -->
             <div class="rounded-2xl bg-slate-50 p-4 border border-slate-200/70 space-y-2">
                 <label class="flex items-start space-x-3 cursor-pointer">
                     <input type="checkbox"
@@ -197,4 +254,29 @@
         </form>
     </div>
 </div>
+
+<script>
+    function syncReviewAiClozeState() {
+        const fillInTheBlankCheckbox = document.getElementById('reviewExercise_fill_in_the_blank');
+        const aiClozeCheckbox = document.getElementById('reviewUseAiCloze');
+        const isAiConfigured = {{ app(\App\Services\Ai\AiSentenceService::class)->isConfigured() ? 'true' : 'false' }};
+
+        if (!aiClozeCheckbox) return;
+
+        if (!fillInTheBlankCheckbox || !fillInTheBlankCheckbox.checked || !isAiConfigured) {
+            aiClozeCheckbox.checked = false;
+            aiClozeCheckbox.disabled = true;
+        } else {
+            aiClozeCheckbox.disabled = false;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const fillInTheBlankCheckbox = document.getElementById('reviewExercise_fill_in_the_blank');
+        if (fillInTheBlankCheckbox) {
+            fillInTheBlankCheckbox.addEventListener('change', syncReviewAiClozeState);
+        }
+        syncReviewAiClozeState();
+    });
+</script>
 @endsection

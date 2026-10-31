@@ -28,6 +28,8 @@ class Language extends Model
         'name',
         'native_name',
         'direction',
+        'tts_locale',
+        'tts_voice',
         'is_active',
         'sort_order',
     ];

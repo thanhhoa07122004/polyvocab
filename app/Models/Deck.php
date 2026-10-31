@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Deck extends Model
 {
@@ -105,6 +106,16 @@ class Deck extends Model
     public function entries(): HasMany
     {
         return $this->hasMany(VocabularyEntry::class)->latest();
+    }
+
+    /**
+     * Danh sách tất cả các nét nghĩa trong các mục từ của bộ từ.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough<\App\Models\EntryMeaning>
+     */
+    public function meanings(): HasManyThrough
+    {
+        return $this->hasManyThrough(EntryMeaning::class, VocabularyEntry::class);
     }
 
     /**

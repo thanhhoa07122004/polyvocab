@@ -170,19 +170,36 @@ class StudySessionController extends Controller
         }
 
         $validated = $request->validate([
-            'result' => ['required', 'string', 'in:pass,fail,skip,self_remember,self_forgot'],
+            'result' => ['nullable', 'string', 'in:pass,fail,skip,self_remember,self_forgot'],
+            'user_answer' => ['nullable'],
             'used_hint' => ['nullable', 'boolean'],
         ]);
 
-        $result = $this->practiceAction->execute(
+        $settings = $session->settings ?: [];
+        $itemQuestions = $settings['item_questions'] ?? [];
+        $question = $itemQuestions[$item->id] ?? $itemQuestions[(string) $item->id] ?? $this->preparePracticeQuestion($session, $item);
+
+        $grading = null;
+        $result = $validated['result'] ?? null;
+
+        // Nếu client gửi user_answer (ví dụ bài Điền từ), thực hiện chấm server-side an toàn
+        if (array_key_exists('user_answer', $validated) && $validated['user_answer'] !== null) {
+            $grading = $this->questionService->gradeAnswer($question, $validated['user_answer']);
+            $result = $grading['is_correct'] ? 'pass' : 'fail';
+        } elseif (! $result) {
+            $result = 'fail';
+        }
+
+        $practiceResult = $this->practiceAction->execute(
             item: $item,
-            result: $validated['result'],
+            result: $result,
             usedHint: (bool) ($validated['used_hint'] ?? false)
         );
 
         return response()->json([
             'success' => true,
-            'data' => $result,
+            'data' => $practiceResult,
+            'grading' => $grading,
         ]);
     }
 
@@ -232,9 +249,32 @@ class StudySessionController extends Controller
         }
 
         $firstLetter = mb_substr($term, 0, 1, 'UTF-8');
-        $hintText = "Ký tự đầu tiên: \"{$firstLetter}\"";
-        if ($example && $example->sentence) {
-            $hintText .= " • Ngữ cảnh ví dụ: " . $example->sentence;
+        $itemQuestions = $settings['item_questions'] ?? [];
+        $question = $itemQuestions[$item->id] ?? $itemQuestions[(string) $item->id] ?? null;
+
+        if ($question && ($question['type'] ?? '') === 'fill_in_the_blank') {
+            $clozeTrans = $question['cloze_translation'] ?? null;
+            if (! $clozeTrans) {
+                $rawTrans = (string) ($question['example_translation'] ?? '');
+                if (! empty($rawTrans)) {
+                    $clozeTrans = $this->questionService->buildClozeTranslation(
+                        $rawTrans,
+                        $meaning->meaning ?? '',
+                        $term
+                    );
+                }
+            }
+
+            if (! empty($clozeTrans)) {
+                $hintText = "Dịch câu: \"{$clozeTrans}\"";
+            } else {
+                $hintText = "Ký tự đầu tiên: \"{$firstLetter}\"";
+            }
+        } else {
+            $hintText = "Ký tự đầu tiên: \"{$firstLetter}\"";
+            if ($example && $example->sentence) {
+                $hintText .= " • Ngữ cảnh ví dụ: " . $example->sentence;
+            }
         }
 
         return response()->json([
@@ -424,20 +464,48 @@ class StudySessionController extends Controller
 
     /**
      * Chuẩn bị câu hỏi luyện nhớ cho mục hiện tại (tái sử dụng QuestionGeneratorService cho 8 dạng bài).
+     * Lưu câu hỏi vào session settings để đảm bảo tải lại trang không làm thay đổi định dạng câu, lựa chọn hay câu hỏi.
      */
     protected function preparePracticeQuestion(StudySession $session, StudySessionItem $item): array
     {
+        $settings = $session->settings ?: [];
+        $itemQuestions = $settings['item_questions'] ?? [];
+
+        $cached = $itemQuestions[$item->id] ?? $itemQuestions[(string) $item->id] ?? null;
+        if (isset($cached) && is_array($cached)) {
+            $cloze = trim((string) ($cached['cloze_sentence'] ?? ''));
+            $isBrokenCloze = ($cached['type'] ?? '') === 'fill_in_the_blank' && (
+                $cloze === '[ ______ ]' || $cloze === '' || str_contains($cloze, '(Nghĩa:')
+            );
+
+            if (! $isBrokenCloze) {
+                return $cached;
+            }
+        }
+
         $meaning = $item->entryMeaning;
         $deck = $session->deck;
 
-        $exerciseTypes = $session->settings['exercise_types'] ?? [];
+        $exerciseTypes = $settings['exercise_types'] ?? [];
         if (empty($exerciseTypes)) {
             $exerciseType = 'multiple_choice_term_to_meaning';
         } else {
             $exerciseType = $exerciseTypes[$item->sort_order % count($exerciseTypes)];
         }
 
-        return $this->questionService->generateQuestion($meaning, $exerciseType, $deck);
+        $options = [
+            'use_ai_cloze' => (bool) ($settings['use_ai_cloze'] ?? false),
+        ];
+
+        $question = $this->questionService->generateQuestion($meaning, $exerciseType, $deck, null, $options);
+
+        // Lưu câu hỏi vào settings để giữ nguyên trên các lần render/reload
+        $itemQuestions[$item->id] = $question;
+        $settings['item_questions'] = $itemQuestions;
+        $session->settings = $settings;
+        $session->save();
+
+        return $question;
     }
 }
 

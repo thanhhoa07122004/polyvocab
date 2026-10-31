@@ -125,6 +125,44 @@
                 </div>
             </div>
 
+            <!-- Cấu hình Azure Speech TTS -->
+            <div class="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-4 space-y-4">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-900">Cấu hình Azure Speech TTS</span>
+                    <span class="text-2xs text-indigo-600">Dùng cho phát âm từ vựng và bài tập nghe</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="tts_locale" class="block text-xs font-medium text-slate-700">
+                            Azure Locale (BCP-47)
+                        </label>
+                        <div class="mt-1">
+                            <input type="text"
+                                   name="tts_locale"
+                                   id="tts_locale"
+                                   value="{{ old('tts_locale') }}"
+                                   placeholder="Ví dụ: vi-VN, en-US, ja-JP..."
+                                   class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="tts_voice" class="block text-xs font-medium text-slate-700">
+                            Tên giọng đọc Azure (Voice Name)
+                        </label>
+                        <div class="mt-1">
+                            <input type="text"
+                                   name="tts_voice"
+                                   id="tts_voice"
+                                   value="{{ old('tts_voice') }}"
+                                   placeholder="Ví dụ: vi-VN-HoaiMyNeural, en-US-JennyNeural..."
+                                   class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Trạng thái hoạt động -->
             <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                 <label class="flex items-start cursor-pointer">

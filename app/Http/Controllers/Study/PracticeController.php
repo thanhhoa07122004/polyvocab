@@ -43,10 +43,12 @@ class PracticeController extends Controller
         if (is_string($selectedDeckIds)) {
             $selectedDeckIds = explode(',', $selectedDeckIds);
         }
-        $selectedDeckIds = array_map('intval', (array) $selectedDeckIds);
+        $selectedDeckIds = array_values(array_filter(array_map('intval', (array) $selectedDeckIds)));
 
         if (empty($selectedDeckIds) && $accessibleDecks->isNotEmpty()) {
-            $selectedDeckIds = [$accessibleDecks->first()->id];
+            // Ưu tiên chọn bộ từ đầu tiên có từ vựng (thay vì chọn bộ từ 0 từ)
+            $firstWithWords = $accessibleDecks->first(fn ($d) => $d->entries_count > 0) ?? $accessibleDecks->first();
+            $selectedDeckIds = [$firstWithWords->id];
         }
 
         $scope = $request->query('scope', 'all');
@@ -54,9 +56,8 @@ class PracticeController extends Controller
             $scope = 'all';
         }
 
-        // Lấy bộ từ đầu tiên để kiểm tra dạng bài mẫu
-        $primaryDeck = $accessibleDecks->firstWhere('id', $selectedDeckIds[0] ?? null) ?? $accessibleDecks->first();
-        $exerciseTypes = $primaryDeck ? $this->eligibilityService->evaluateDeckExercises($primaryDeck) : [];
+        // Đánh giá dạng bài khả dụng dựa trên TẤT CẢ các bộ từ được chọn
+        $exerciseTypes = $this->eligibilityService->evaluateDecksExercises($selectedDeckIds);
 
         // Đếm số nghĩa khả dụng theo scope
         $availableMeaningsCount = 0;
@@ -67,6 +68,7 @@ class PracticeController extends Controller
         }
 
         // Kiểm tra xem có phiên luyện dở không
+        $primaryDeck = $accessibleDecks->firstWhere('id', $selectedDeckIds[0] ?? null) ?? $accessibleDecks->first();
         $activeSession = $this->progressService->getActiveSession($user, $primaryDeck);
 
         return view('study.practice_index', [
@@ -114,6 +116,48 @@ class PracticeController extends Controller
     }
 
     /**
+     * API tính toán số lượng từ khả dụng và độ hợp lệ của các dạng bài khi người dùng chọn/bỏ chọn bộ từ hoặc phạm vi.
+     */
+    public function estimate(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $user = $request->user();
+        $deckIds = $request->input('deck_ids', []);
+        if (is_string($deckIds)) {
+            $deckIds = explode(',', $deckIds);
+        }
+        $deckIds = array_values(array_filter(array_map('intval', (array) $deckIds)));
+
+        // Kiểm tra quyền truy cập các bộ từ được yêu cầu
+        $validDeckIds = Deck::query()
+            ->whereIn('id', $deckIds)
+            ->where(function ($q) use ($user) {
+                $q->where('user_id', $user->id)
+                    ->orWhere('visibility', 'public');
+            })
+            ->pluck('id')
+            ->all();
+
+        $scope = $request->input('scope', 'all');
+        if (! in_array($scope, ['all', 'studied', 'unstudied', 'difficult'], true)) {
+            $scope = 'all';
+        }
+
+        $availableMeaningsCount = 0;
+        if (! empty($validDeckIds)) {
+            $availableMeaningsCount = $this->progressService
+                ->getEligibleMeaningsForPractice($user, $validDeckIds, $scope, $scope === 'difficult')
+                ->count();
+        }
+
+        $exerciseTypes = $this->eligibilityService->evaluateDecksExercises($validDeckIds);
+
+        return response()->json([
+            'available_count' => $availableMeaningsCount,
+            'exercise_types' => $exerciseTypes,
+        ]);
+    }
+
+    /**
      * Bắt đầu phiên luyện tập tự do.
      */
     public function start(Request $request): RedirectResponse
@@ -127,6 +171,7 @@ class PracticeController extends Controller
             'count' => ['required', 'integer', 'min:1', 'max:50'],
             'exercise_types' => ['nullable', 'array'],
             'exercise_types.*' => ['string'],
+            'use_ai_cloze' => ['nullable', 'boolean'],
         ], [
             'deck_ids.required' => 'Vui lòng chọn ít nhất một bộ từ.',
             'scope.required' => 'Vui lòng chọn phạm vi nội dung.',
@@ -135,6 +180,7 @@ class PracticeController extends Controller
         ]);
 
         $selectedExerciseTypes = $validated['exercise_types'] ?? ['flashcard', 'multiple_choice_term_to_meaning'];
+        $useAiCloze = (bool) ($validated['use_ai_cloze'] ?? false);
 
         $session = $this->createPracticeAction->execute(
             user: $user,
@@ -142,7 +188,8 @@ class PracticeController extends Controller
             scope: $validated['scope'],
             requestedCount: (int) $validated['count'],
             selectedExerciseTypes: $selectedExerciseTypes,
-            isDifficultOnly: ($validated['scope'] === 'difficult')
+            isDifficultOnly: ($validated['scope'] === 'difficult'),
+            useAiCloze: $useAiCloze
         );
 
         if (! $session) {

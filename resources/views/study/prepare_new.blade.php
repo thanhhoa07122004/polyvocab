@@ -48,7 +48,11 @@
                 </div>
 
                 <div class="inline-flex items-center space-x-1.5 rounded-xl border border-indigo-100 bg-indigo-50/70 px-3 py-1.5 text-indigo-800 shadow-2xs">
-                    <span class="font-bold">{{ __('study.unstudied_content', ['count' => $availableCount]) }}</span>
+                    @if (($unstudiedCount ?? 1) > 0)
+                        <span class="font-bold">{{ __('study.unstudied_content', ['count' => $availableCount]) }}</span>
+                    @else
+                        <span class="font-bold">Có {{ $availableCount }} từ vựng trong bộ</span>
+                    @endif
                 </div>
             </div>
         </div>

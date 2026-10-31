@@ -96,6 +96,7 @@ class ReviewController extends Controller
             'is_extra_practice' => ['nullable', 'boolean'],
             'exercise_types' => ['nullable', 'array'],
             'exercise_types.*' => ['string'],
+            'use_ai_cloze' => ['nullable', 'boolean'],
         ]);
 
         $session = $this->createReviewAction->execute(
@@ -104,7 +105,8 @@ class ReviewController extends Controller
             languageId: $validated['language_id'] ?? null,
             requestedCount: (int) $validated['count'],
             isExtraPractice: (bool) ($validated['is_extra_practice'] ?? false),
-            selectedExerciseTypes: $validated['exercise_types'] ?? []
+            selectedExerciseTypes: $validated['exercise_types'] ?? [],
+            useAiCloze: (bool) ($validated['use_ai_cloze'] ?? false)
         );
 
         if (! $session) {

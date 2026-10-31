@@ -39,11 +39,18 @@ class CreateLearnNewSessionAction
         $maxBatch = (int) config('polyvocab.study.max_batch_size', 50);
         $count = max($minBatch, min($maxBatch, $requestedCount));
 
-        // Lấy danh sách nghĩa chưa học
+        // Lấy danh sách nghĩa để học (ưu tiên từ chưa học, nếu đã học hết thì lấy từ trong bộ để học lại)
         $unstudiedMeanings = $this->progressService->getUnstudiedMeaningsQuery($user, $deck)
             ->with(['vocabularyEntry', 'examples'])
             ->take($count)
             ->get();
+
+        if ($unstudiedMeanings->isEmpty()) {
+            $unstudiedMeanings = $deck->meanings()
+                ->with(['vocabularyEntry', 'examples'])
+                ->take($count)
+                ->get();
+        }
 
         if ($unstudiedMeanings->isEmpty()) {
             return null;

@@ -56,7 +56,9 @@ class LearnNewController extends Controller
         }
 
         $user = $request->user();
-        $availableMeaningsCount = $this->progressService->getUnstudiedMeaningsCount($user, $deck);
+        $unstudiedCount = $this->progressService->getUnstudiedMeaningsCount($user, $deck);
+        $totalDeckMeanings = $deck->meanings()->count();
+        $availableMeaningsCount = $unstudiedCount > 0 ? $unstudiedCount : $totalDeckMeanings;
         $activeSession = $this->progressService->getActiveSession($user, $deck);
         $exercises = $this->eligibilityService->evaluateDeckExercises($deck);
 
@@ -67,6 +69,7 @@ class LearnNewController extends Controller
 
         return view('study.prepare_new', [
             'deck' => $deck->load(['learningLanguage', 'meaningLanguage']),
+            'unstudiedCount' => $unstudiedCount,
             'availableCount' => $availableMeaningsCount,
             'activeSession' => $activeSession,
             'exercises' => $exercises,

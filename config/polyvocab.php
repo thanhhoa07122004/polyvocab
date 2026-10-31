@@ -69,6 +69,11 @@ return [
             'count_presets' => [5, 10, 20, 30],
         ],
 
+        // Cấu hình AI Đặt câu cho dạng bài Điền từ
+        'ai_cloze' => [
+            'choice_ratio' => (float) env('AI_CLOZE_CHOICE_RATIO', 0.5), // Tỷ lệ dạng trắc nghiệm 4 đáp án (0.5 = 50%)
+        ],
+
         // 8 dạng bài học & luyện nhớ theo yêu cầu hệ thống
         'exercise_types' => [
             'flashcard' => [

@@ -65,6 +65,8 @@ class LanguageController extends Controller
             'name' => ['required', 'string', 'max:100'],
             'native_name' => ['required', 'string', 'max:100'],
             'direction' => ['required', Rule::in(['ltr', 'rtl'])],
+            'tts_locale' => ['nullable', 'string', 'max:30'],
+            'tts_voice' => ['nullable', 'string', 'max:100'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
         ], [
@@ -108,6 +110,8 @@ class LanguageController extends Controller
             'name' => ['required', 'string', 'max:100'],
             'native_name' => ['required', 'string', 'max:100'],
             'direction' => ['required', Rule::in(['ltr', 'rtl'])],
+            'tts_locale' => ['nullable', 'string', 'max:30'],
+            'tts_voice' => ['nullable', 'string', 'max:100'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
         ], [

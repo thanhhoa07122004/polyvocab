@@ -87,6 +87,53 @@
         </div>
     </div>
 
+    @if ($isEdit && isset($entry) && $entry->exists)
+        <!-- Quản lý Phát âm (TTS) -->
+        <div class="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 space-y-2">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-700">Âm thanh phát âm</span>
+                @if ($entry->hasAudio())
+                    <span id="formAudioBadge" class="inline-flex items-center rounded-lg bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-2xs font-semibold text-emerald-800">
+                        ✓ Đã có âm thanh ({{ $entry->audio_source === 'manual' ? 'Thủ công' : ($entry->audio_voice ?? 'Azure TTS') }})
+                    </span>
+                @else
+                    <span id="formAudioBadge" class="inline-flex items-center rounded-lg bg-slate-100 border border-slate-200 px-2 py-0.5 text-2xs font-medium text-slate-500">
+                        Chưa có âm thanh
+                    </span>
+                @endif
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2 pt-1">
+                <div id="formAudioPlayContainer" class="{{ $entry->hasAudio() ? '' : 'hidden' }}">
+                    <button type="button"
+                            id="formBtnPlayAudio"
+                            onclick="playFormAudio('{{ $entry->audio_url }}')"
+                            class="inline-flex items-center space-x-1.5 rounded-xl bg-indigo-50 border border-indigo-200 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100 transition cursor-pointer">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                        </svg>
+                        <span>Nghe thử</span>
+                    </button>
+                </div>
+
+                <button type="button"
+                        id="formBtnGenerateAudio"
+                        onclick="generateFormAudio(false)"
+                        class="inline-flex items-center space-x-1.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 transition cursor-pointer">
+                    <span id="formGenerateSpinner" class="hidden">
+                        <svg class="h-3.5 w-3.5 animate-spin text-slate-700" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                        </svg>
+                    </span>
+                    <span id="formGenerateBtnText">{{ $entry->hasAudio() ? 'Tạo lại phát âm (TTS)' : 'Tạo phát âm (TTS)' }}</span>
+                </button>
+            </div>
+
+            <div id="formAudioNotice" class="hidden text-xs font-medium"></div>
+        </div>
+    @endif
+
     <!-- Ghi chú chung của mục từ -->
     <div>
         <label for="note" class="block text-sm font-medium text-slate-900">

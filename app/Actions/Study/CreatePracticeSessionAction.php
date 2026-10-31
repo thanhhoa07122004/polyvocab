@@ -38,7 +38,8 @@ class CreatePracticeSessionAction
         int $requestedCount = 10,
         array $selectedExerciseTypes = [],
         bool $isDifficultOnly = false,
-        ?array $specificMeaningIds = null
+        ?array $specificMeaningIds = null,
+        bool $useAiCloze = false
     ): ?StudySession {
         // Kiểm tra quyền truy cập các bộ từ
         $accessibleDecks = Deck::query()
@@ -61,19 +62,29 @@ class CreatePracticeSessionAction
         $maxBatch = (int) config('polyvocab.study.practice.max_count', 50);
         $count = max($minBatch, min($maxBatch, $requestedCount));
 
+        $requiresAudioOnly = ! empty($selectedExerciseTypes) && collect($selectedExerciseTypes)->every(
+            fn ($t) => in_array($t, ['listen_and_choose', 'listen_and_type'], true)
+        );
+        $hasAnyAudio = $requiresAudioOnly && EntryMeaning::whereHas('vocabularyEntry', fn ($q) => $q->whereIn('deck_id', $validDeckIds)->whereNotNull('audio_path'))->exists();
+
         // Lấy danh sách nghĩa theo danh sách cụ thể hoặc theo scope
         if (! empty($specificMeaningIds)) {
-            $meanings = EntryMeaning::query()
+            $meaningsQuery = EntryMeaning::query()
                 ->whereIn('id', $specificMeaningIds)
                 ->whereHas('vocabularyEntry', function ($q) use ($validDeckIds) {
                     $q->whereIn('deck_id', $validDeckIds);
-                })
-                ->with(['vocabularyEntry', 'examples'])
-                ->get();
+                });
+            if ($hasAnyAudio) {
+                $meaningsQuery->whereHas('vocabularyEntry', fn ($q) => $q->whereNotNull('audio_path'));
+            }
+            $meanings = $meaningsQuery->with(['vocabularyEntry', 'examples'])->get();
         } else {
-            $meanings = $this->progressService
-                ->getEligibleMeaningsForPractice($user, $validDeckIds, $scope, $isDifficultOnly)
-                ->with(['vocabularyEntry', 'examples'])
+            $meaningsQuery = $this->progressService
+                ->getEligibleMeaningsForPractice($user, $validDeckIds, $scope, $isDifficultOnly);
+            if ($hasAnyAudio) {
+                $meaningsQuery->whereHas('vocabularyEntry', fn ($q) => $q->whereNotNull('audio_path'));
+            }
+            $meanings = $meaningsQuery->with(['vocabularyEntry', 'examples'])
                 ->inRandomOrder()
                 ->take($count)
                 ->get();
@@ -87,7 +98,7 @@ class CreatePracticeSessionAction
             ? StudyMode::PracticeDifficult
             : StudyMode::PracticeCustom;
 
-        return DB::transaction(function () use ($user, $primaryDeck, $meanings, $mode, $scope, $selectedExerciseTypes, $validDeckIds) {
+        return DB::transaction(function () use ($user, $primaryDeck, $meanings, $mode, $scope, $selectedExerciseTypes, $validDeckIds, $useAiCloze) {
             $chunkSize = 5;
 
             $session = StudySession::create([
@@ -100,6 +111,7 @@ class CreatePracticeSessionAction
                 'current_chunk' => 0,
                 'settings' => [
                     'exercise_types' => $selectedExerciseTypes,
+                    'use_ai_cloze' => $useAiCloze,
                     'scope' => $scope,
                     'is_extra_practice' => true, // Bảo vệ không thay đổi lịch ôn SRS
                     'deck_ids' => $validDeckIds,

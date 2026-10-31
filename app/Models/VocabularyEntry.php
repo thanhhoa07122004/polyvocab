@@ -21,7 +21,48 @@ class VocabularyEntry extends Model
         'term',
         'pronunciation',
         'note',
+        'audio_path',
+        'audio_source',
+        'audio_voice',
+        'audio_hash',
+        'audio_char_count',
     ];
+
+    /**
+     * Kiểm tra xem mục từ đã có file âm thanh hợp lệ chưa.
+     */
+    public function hasAudio(): bool
+    {
+        return ! empty($this->audio_path);
+    }
+
+    /**
+     * Kiểm tra xem âm thanh này có phải là audio tải lên thủ công không.
+     */
+    public function isManualAudio(): bool
+    {
+        return $this->audio_source === 'manual';
+    }
+
+    /**
+     * Kiểm tra xem âm thanh này có phải do Azure TTS tạo không.
+     */
+    public function isTtsAudio(): bool
+    {
+        return $this->audio_source === 'azure_tts';
+    }
+
+    /**
+     * Đường dẫn URL phát âm thanh qua endpoint bảo mật.
+     */
+    public function getAudioUrlAttribute(): ?string
+    {
+        if (! $this->hasAudio()) {
+            return null;
+        }
+
+        return route('audio.entries.play', ['entry' => $this->id]);
+    }
 
     /**
      * Bộ từ chứa mục từ vựng này.

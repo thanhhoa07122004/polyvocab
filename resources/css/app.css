@@ -81,6 +81,9 @@
     --theme-warning-bg: #FFFBEB;
     --theme-warning-border: #FDE68A;
     --theme-warning-text: #92400E;
+    --theme-warning-badge-bg: #FEF3C7;
+    --theme-warning-badge-border: #FCD34D;
+    --theme-warning-badge-text: #78350F;
 
     --theme-info-bg: #F0F9FF;
     --theme-info-border: #BAE6FD;
@@ -151,8 +154,11 @@
     --theme-danger-btn-hover: #BE123C;
 
     --theme-warning-bg: rgba(245, 158, 11, 0.14);
-    --theme-warning-border: rgba(251, 191, 36, 0.3);
+    --theme-warning-border: rgba(251, 191, 36, 0.35);
     --theme-warning-text: #FCD34D;
+    --theme-warning-badge-bg: rgba(245, 158, 11, 0.24);
+    --theme-warning-badge-border: rgba(251, 191, 36, 0.45);
+    --theme-warning-badge-text: #FDE68A;
 
     --theme-info-bg: rgba(14, 165, 233, 0.14);
     --theme-info-border: rgba(56, 189, 248, 0.3);
@@ -225,6 +231,9 @@
     --theme-warning-bg: #FFFBEB;
     --theme-warning-border: #FDE68A;
     --theme-warning-text: #92400E;
+    --theme-warning-badge-bg: #FEF3C7;
+    --theme-warning-badge-border: #FCD34D;
+    --theme-warning-badge-text: #78350F;
 
     --theme-info-bg: #FDF2F8;
     --theme-info-border: #FBCFE8;
@@ -295,8 +304,11 @@
     --theme-danger-btn-hover: #E11D48;
 
     --theme-warning-bg: rgba(245, 158, 11, 0.14);
-    --theme-warning-border: rgba(251, 191, 36, 0.3);
+    --theme-warning-border: rgba(251, 191, 36, 0.35);
     --theme-warning-text: #FCD34D;
+    --theme-warning-badge-bg: rgba(245, 158, 11, 0.24);
+    --theme-warning-badge-border: rgba(251, 191, 36, 0.45);
+    --theme-warning-badge-text: #FDE68A;
 
     --theme-info-bg: rgba(196, 167, 236, 0.14);
     --theme-info-border: rgba(196, 167, 236, 0.32);
@@ -369,6 +381,9 @@
     --theme-warning-bg: #FFFBEB;
     --theme-warning-border: #FDE68A;
     --theme-warning-text: #92400E;
+    --theme-warning-badge-bg: #FEF3C7;
+    --theme-warning-badge-border: #FCD34D;
+    --theme-warning-badge-text: #78350F;
 
     --theme-info-bg: #EFF6FF;
     --theme-info-border: #BFDBFE;
@@ -640,10 +655,16 @@ footer {
         border-color: var(--theme-primary) !important;
     }
     .bg-indigo-50,
+    .bg-indigo-50\/95,
+    .bg-indigo-50\/90,
+    .bg-indigo-50\/80,
     .bg-indigo-50\/70,
+    .bg-indigo-50\/60,
     .bg-indigo-50\/50,
     .bg-indigo-50\/40,
-    .bg-indigo-50\/30 {
+    .bg-indigo-50\/30,
+    .bg-indigo-50\/20,
+    .bg-indigo-50\/10 {
         background-color: var(--theme-primary-subtle) !important;
     }
     .border-indigo-200,
@@ -689,28 +710,37 @@ footer {
     }
 
     /* Secondary / Neutral Buttons */
-    button.border-slate-300.bg-white,
-    a.border-slate-300.bg-white,
-    button.border-slate-200.bg-white,
-    a.border-slate-200.bg-white,
+    button.border-slate-300,
+    button.border-slate-200,
+    a.border-slate-300,
+    a.border-slate-200,
     .btn-secondary {
         background-color: var(--theme-btn-sec-bg) !important;
         border-color: var(--theme-btn-sec-border) !important;
         color: var(--theme-btn-sec-text) !important;
     }
-    button.border-slate-300.bg-white:hover,
-    a.border-slate-300.bg-white:hover,
-    button.border-slate-200.bg-white:hover,
-    a.border-slate-200.bg-white:hover,
+    button.border-slate-300:hover,
+    button.border-slate-200:hover,
+    a.border-slate-300:hover,
+    a.border-slate-200:hover,
     .btn-secondary:hover {
         background-color: var(--theme-btn-sec-hover) !important;
     }
 
     /* Soft Alert / Feedback panels - êm dịu, không gắt */
     .bg-emerald-50,
+    .bg-emerald-50\/95,
+    .bg-emerald-50\/90,
+    .bg-emerald-50\/80,
+    .bg-emerald-50\/70,
     .bg-emerald-50\/60,
     .bg-emerald-50\/50,
-    .bg-emerald-50\/40 {
+    .bg-emerald-50\/40,
+    .bg-emerald-50\/30,
+    .bg-emerald-100,
+    .bg-emerald-100\/80,
+    .bg-emerald-100\/70,
+    .bg-emerald-200 {
         background-color: var(--theme-success-bg) !important;
         border-color: var(--theme-success-border) !important;
         color: var(--theme-success-text) !important;
@@ -721,21 +751,25 @@ footer {
     .text-emerald-600 {
         color: var(--theme-success-text) !important;
     }
+    .border-emerald-300,
     .border-emerald-200,
     .border-emerald-100 {
         border-color: var(--theme-success-border) !important;
     }
-    .bg-emerald-100,
-    .bg-emerald-100\/70 {
-        background-color: var(--theme-success-bg) !important;
-        color: var(--theme-success-text) !important;
-    }
 
     .bg-rose-50,
+    .bg-rose-50\/95,
+    .bg-rose-50\/90,
+    .bg-rose-50\/80,
+    .bg-rose-50\/70,
     .bg-rose-50\/60,
     .bg-rose-50\/50,
     .bg-rose-50\/40,
-    .bg-rose-50\/30 {
+    .bg-rose-50\/30,
+    .bg-rose-50\/20,
+    .bg-rose-50\/10,
+    .bg-rose-100,
+    .bg-rose-200 {
         background-color: var(--theme-danger-bg) !important;
         border-color: var(--theme-danger-border) !important;
         color: var(--theme-danger-text) !important;
@@ -752,45 +786,89 @@ footer {
         border-color: var(--theme-danger-border) !important;
     }
 
+    /* Warning & Reminder Panels (Bảng nhắc nhở, phiên đang học dở, ghi chú từ) */
     .bg-amber-50,
+    .bg-amber-50\/95,
     .bg-amber-50\/90,
     .bg-amber-50\/80,
+    .bg-amber-50\/70,
     .bg-amber-50\/60,
     .bg-amber-50\/50,
-    .bg-amber-50\/40 {
+    .bg-amber-50\/40,
+    .bg-amber-50\/30,
+    .bg-amber-50\/20,
+    .bg-amber-50\/10 {
         background-color: var(--theme-warning-bg) !important;
         border-color: var(--theme-warning-border) !important;
-        color: var(--theme-warning-text) !important;
     }
+    .border-amber-300,
+    .border-amber-200,
+    .border-amber-200\/80,
+    .border-amber-200\/60,
+    .border-amber-100 {
+        border-color: var(--theme-warning-border) !important;
+    }
+
+    /* Warning Badges & Icon Containers (Huy hiệu 'BẠN ĐANG HỌC DỞ', icon đồng hồ, nhãn giai đoạn) */
+    .bg-amber-100,
+    .bg-amber-100\/90,
+    .bg-amber-100\/80,
+    .bg-amber-100\/70,
+    .bg-amber-100\/60,
+    .bg-amber-100\/50,
+    .bg-amber-200,
+    .bg-amber-200\/90,
+    .bg-amber-200\/80,
+    .bg-amber-200\/70,
+    .bg-amber-200\/60,
+    .bg-amber-200\/50 {
+        background-color: var(--theme-warning-badge-bg) !important;
+        border: 1px solid var(--theme-warning-badge-border) !important;
+        color: var(--theme-warning-badge-text) !important;
+    }
+
     .text-amber-900,
     .text-amber-800,
     .text-amber-700,
     .text-amber-600 {
         color: var(--theme-warning-text) !important;
     }
-    .border-amber-300,
-    .border-amber-200,
-    .border-amber-100 {
-        border-color: var(--theme-warning-border) !important;
+    .text-amber-500 {
+        color: #FBBF24 !important;
     }
-    .bg-amber-100,
-    .bg-amber-100\/70,
-    .bg-amber-200 {
-        background-color: var(--theme-warning-bg) !important;
-        color: var(--theme-warning-text) !important;
+    .text-amber-400 {
+        color: #FDE68A !important;
     }
 
+    /* Info Notices (Thông báo, ghi chú nguyên tắc) */
     .bg-blue-50,
+    .bg-blue-50\/95,
+    .bg-blue-50\/90,
+    .bg-blue-50\/80,
     .bg-blue-50\/70,
+    .bg-blue-50\/60,
+    .bg-blue-50\/50,
+    .bg-blue-50\/40,
+    .bg-blue-50\/30,
+    .bg-blue-100,
+    .bg-sky-50,
     .bg-sky-100 {
         background-color: var(--theme-info-bg) !important;
         border-color: var(--theme-info-border) !important;
         color: var(--theme-info-text) !important;
     }
-    .text-blue-700,
     .text-blue-900,
-    .text-sky-800 {
+    .text-blue-800,
+    .text-blue-700,
+    .text-blue-600,
+    .text-sky-800,
+    .text-sky-700 {
         color: var(--theme-info-text) !important;
+    }
+    .border-blue-300,
+    .border-blue-200,
+    .border-blue-100 {
+        border-color: var(--theme-info-border) !important;
     }
 
     /* Study Cards & Practice Options */
@@ -984,28 +1062,37 @@ footer {
 }
 
 /* ==========================================================================
-   3D FLASHCARD FLIP COMPONENT (HIỆU ỨNG THẺ LẬT 3D MƯỢT MÀ)
+   3D FLASHCARD FLIP COMPONENT (HIỆU ỨNG THẺ XOAY NGANG 3D - TRỤC GIỮA LÀM TÂM)
    ========================================================================== */
 .flashcard-3d-scene {
     perspective: 1200px;
+    -webkit-perspective: 1200px;
     width: 100%;
+    max-width: 440px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .flashcard-3d-card {
     position: relative;
     width: 100%;
-    min-height: 320px;
-    height: 340px;
+    min-height: 210px;
+    height: 225px;
     transform-style: preserve-3d;
     -webkit-transform-style: preserve-3d;
-    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: 50% 50% !important;
     cursor: pointer;
     user-select: none;
-    border-radius: 1.5rem;
+    border-radius: 1.25rem;
+    will-change: transform, box-shadow;
+    transform: perspective(1000px) rotateY(0deg);
 }
 
-.flashcard-3d-card.is-flipped {
-    transform: rotateY(180deg);
+@media (min-width: 640px) {
+    .flashcard-3d-card {
+        min-height: 220px;
+        height: 235px;
+    }
 }
 
 .flashcard-3d-face {
@@ -1015,22 +1102,488 @@ footer {
     height: 100%;
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
+    transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
+    transform-origin: 50% 50% !important;
     border-radius: 1.5rem;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     align-items: center;
     box-sizing: border-box;
-    overflow-y: auto;
+    will-change: transform, opacity;
 }
 
 .flashcard-3d-front {
-    transform: rotateY(0deg);
+    transform: rotateY(0deg) translateZ(1px);
+    -webkit-transform: rotateY(0deg) translateZ(1px);
     z-index: 2;
+    opacity: 1;
 }
 
 .flashcard-3d-back {
-    transform: rotateY(180deg);
+    transform: rotateY(180deg) translateZ(1px);
+    -webkit-transform: rotateY(180deg) translateZ(1px);
+    z-index: 1;
+    opacity: 0;
+}
+
+/* ==========================================================================
+   KEYFRAME ANIMATIONS: XOAY NGANG NHANH, DỨT KHOÁT, LẤY TRỤC GIỮA LÀM TÂM
+   ========================================================================== */
+@keyframes flashcardFlipToBack {
+    0% {
+        transform: perspective(1000px) rotateY(0deg) scale(1);
+        box-shadow: 0 4px 14px -2px rgba(0, 0, 0, 0.08);
+    }
+    50% {
+        /* Xoay ngang chuẩn xác quanh trục giữa Y, nhô nhẹ 3% về phía trước */
+        transform: perspective(1000px) rotateY(90deg) scale(1.03);
+        box-shadow: 0 16px 28px -4px rgba(0, 0, 0, 0.14);
+    }
+    100% {
+        /* Đặt hoàn chỉnh vào mặt sau 180 độ */
+        transform: perspective(1000px) rotateY(180deg) scale(1);
+        box-shadow: 0 4px 14px -2px rgba(0, 0, 0, 0.08);
+    }
+}
+
+@keyframes flashcardFlipToFront {
+    0% {
+        transform: perspective(1000px) rotateY(180deg) scale(1);
+        box-shadow: 0 4px 14px -2px rgba(0, 0, 0, 0.08);
+    }
+    50% {
+        /* Xoay ngang ngược lại quanh trục giữa */
+        transform: perspective(1000px) rotateY(90deg) scale(1.03);
+        box-shadow: 0 16px 28px -4px rgba(0, 0, 0, 0.14);
+    }
+    100% {
+        /* Đặt hoàn chỉnh về mặt trước 0 độ */
+        transform: perspective(1000px) rotateY(0deg) scale(1);
+        box-shadow: 0 4px 14px -2px rgba(0, 0, 0, 0.08);
+    }
+}
+
+.flashcard-3d-card.flip-to-back {
+    animation: flashcardFlipToBack 0.2s cubic-bezier(0.15, 0.9, 0.25, 1) forwards !important;
+}
+
+.flashcard-3d-card.flip-to-front {
+    animation: flashcardFlipToFront 0.2s cubic-bezier(0.15, 0.9, 0.25, 1) forwards !important;
+}
+
+/* Đồng bộ hiển thị 2 mặt thẻ trong khi lật (đúng góc 90 độ của 0.2s) */
+.flashcard-3d-card.flip-to-back .flashcard-3d-front {
+    animation: faceHideAt90 0.2s linear forwards !important;
+}
+.flashcard-3d-card.flip-to-back .flashcard-3d-back {
+    animation: faceShowAt90 0.2s linear forwards !important;
+}
+
+.flashcard-3d-card.flip-to-front .flashcard-3d-front {
+    animation: faceShowAt90 0.2s linear forwards !important;
+}
+.flashcard-3d-card.flip-to-front .flashcard-3d-back {
+    animation: faceHideAt90 0.2s linear forwards !important;
+}
+
+@keyframes faceHideAt90 {
+    0% { opacity: 1; z-index: 2; pointer-events: none; }
+    48% { opacity: 1; z-index: 2; pointer-events: none; }
+    50% { opacity: 0; z-index: 1; pointer-events: none; }
+    100% { opacity: 0; z-index: 1; pointer-events: none; }
+}
+
+@keyframes faceShowAt90 {
+    0% { opacity: 0; z-index: 1; pointer-events: none; }
+    48% { opacity: 0; z-index: 1; pointer-events: none; }
+    50% { opacity: 1; z-index: 2; pointer-events: auto; }
+    100% { opacity: 1; z-index: 2; pointer-events: auto; }
+}
+
+/* Trạng thái tĩnh khi đã lật xong sang mặt sau */
+.flashcard-3d-card.is-flipped {
+    transform: perspective(1000px) rotateY(180deg);
+}
+
+.flashcard-3d-card.is-flipped .flashcard-3d-front {
+    opacity: 0;
+    pointer-events: none;
     z-index: 1;
 }
+
+.flashcard-3d-card.is-flipped .flashcard-3d-back {
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 2;
+}
+
+/* Tương thích chế độ nền tối cho Thẻ ghi nhớ 3D */
+[data-theme="dark"] .flashcard-3d-front,
+[data-theme="plum_dark"] .flashcard-3d-front {
+    background-color: var(--theme-bg-card) !important;
+    border-color: rgba(99, 102, 241, 0.45) !important;
+}
+
+[data-theme="dark"] .flashcard-3d-back,
+[data-theme="plum_dark"] .flashcard-3d-back {
+    background-color: var(--theme-bg-card) !important;
+    border-color: rgba(16, 185, 129, 0.45) !important;
+}
+
+/* ==========================================================================
+   HERO INTERACTIVE ROTATING CARD STACK (HIỆU ỨNG THẺ XOAY HOÁN ĐỔI)
+   ========================================================================== */
+.hero-card-stack {
+    perspective: 1200px;
+    user-select: none;
+    position: relative;
+    width: 100%;
+}
+
+.hero-swap-card {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    border-radius: 1.5rem;
+    cursor: pointer;
+    transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    will-change: transform, opacity;
+    transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.28s ease,
+                filter 0.28s ease,
+                box-shadow 0.28s ease;
+}
+
+/* Thẻ chính đang ở mặt trước (Slot 0) */
+.hero-swap-card[data-slot="0"] {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+    z-index: 30;
+    opacity: 1;
+    pointer-events: auto;
+    filter: none;
+    box-shadow: 0 14px 28px -6px rgba(0, 0, 0, 0.1), 0 3px 10px -2px rgba(0, 0, 0, 0.05);
+}
+
+.hero-swap-card[data-slot="0"]:hover {
+    transform: translate3d(0, -3px, 10px) rotate(0.4deg) scale(1.008);
+    box-shadow: 0 18px 32px -6px rgba(0, 0, 0, 0.13), 0 5px 12px -2px rgba(0, 0, 0, 0.06);
+}
+
+/* Thẻ lót ngay phía sau bên phải (Slot 1) - góc nhìn hài hòa, nhô nhẹ vừa tầm */
+.hero-swap-card[data-slot="1"] {
+    transform: translate3d(14px, -11px, -20px) rotate(2.2deg) scale(0.97);
+    z-index: 20;
+    opacity: 0.94;
+    pointer-events: auto;
+    filter: brightness(0.98);
+    box-shadow: 0 8px 18px -4px rgba(0, 0, 0, 0.08);
+}
+
+.hero-swap-card[data-slot="1"]:hover {
+    transform: translate3d(20px, -15px, -12px) rotate(3.4deg) scale(0.985);
+    opacity: 1;
+    filter: brightness(1);
+}
+
+/* Thẻ lót tầng 3 bên trái (Slot 2) */
+.hero-swap-card[data-slot="2"] {
+    transform: translate3d(-10px, -18px, -40px) rotate(-1.8deg) scale(0.94);
+    z-index: 10;
+    opacity: 0.85;
+    pointer-events: auto;
+    filter: brightness(0.95);
+    box-shadow: 0 6px 14px -4px rgba(0, 0, 0, 0.06);
+}
+
+.hero-swap-card[data-slot="2"]:hover {
+    transform: translate3d(-15px, -22px, -30px) rotate(-2.8deg) scale(0.955);
+    opacity: 0.96;
+    filter: brightness(0.99);
+}
+
+/* Thẻ chờ ở hậu cảnh (Slot 3 & 4) */
+.hero-swap-card[data-slot="3"],
+.hero-swap-card[data-slot="4"] {
+    transform: translate3d(0, -24px, -60px) rotate(0deg) scale(0.91);
+    z-index: 5;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* ==========================================================================
+   KEYFRAME ANIMATION THẺ DI CHUYỂN VÀ XOAY HOÁN ĐỔI 3D NHANH & DỨT KHOÁT
+   ========================================================================== */
+@keyframes heroCardSwingOut {
+    0% {
+        transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+        z-index: 50;
+        opacity: 1;
+    }
+    35% {
+        /* Bay nhanh sang phải và nghiêng nhẹ 11 độ trong không gian 3D */
+        transform: translate3d(75px, -14px, 40px) rotate(11deg) scale(1.02);
+        z-index: 50;
+        opacity: 0.98;
+    }
+    52% {
+        /* Đảo z-index chìm xuống dưới lớp thẻ mới */
+        transform: translate3d(48px, -15px, -10px) rotate(6.5deg) scale(0.98);
+        z-index: 15;
+        opacity: 0.96;
+    }
+    100% {
+        /* Thu về vị trí slot 1 chuẩn xác */
+        transform: translate3d(14px, -11px, -20px) rotate(2.2deg) scale(0.97);
+        z-index: 20;
+        opacity: 0.94;
+    }
+}
+
+@keyframes heroCardSwingIn {
+    0% {
+        transform: translate3d(14px, -11px, -20px) rotate(2.2deg) scale(0.97);
+        z-index: 20;
+    }
+    30% {
+        /* Trượt nhẹ ngược hướng, nhô lên phía trước */
+        transform: translate3d(-8px, -5px, 15px) rotate(-1.2deg) scale(0.99);
+        z-index: 35;
+    }
+    100% {
+        /* Đặt vào mặt trước ngay ngắn */
+        transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+        z-index: 35;
+    }
+}
+
+.hero-swap-card.card-swing-out {
+    animation: heroCardSwingOut 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+    pointer-events: none !important;
+}
+
+.hero-swap-card.card-swing-in {
+    animation: heroCardSwingIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+    pointer-events: none !important;
+}
+
+/* Tương thích bóng đổ & tương phản cho các tone nền (Chủ đề tối, mận tím, hồng pastel) */
+[data-theme="dark"] .hero-swap-card[data-slot="0"],
+[data-theme="plum_dark"] .hero-swap-card[data-slot="0"] {
+    box-shadow: 0 16px 36px -6px rgba(0, 0, 0, 0.65), 0 0 0 1px var(--theme-border);
+}
+[data-theme="dark"] .hero-swap-card[data-slot="0"]:hover,
+[data-theme="plum_dark"] .hero-swap-card[data-slot="0"]:hover {
+    box-shadow: 0 22px 42px -6px rgba(0, 0, 0, 0.78), 0 0 0 1px var(--theme-border);
+}
+[data-theme="dark"] .hero-swap-card[data-slot="1"],
+[data-theme="plum_dark"] .hero-swap-card[data-slot="1"] {
+    filter: brightness(0.88);
+    box-shadow: 0 12px 24px -5px rgba(0, 0, 0, 0.55), 0 0 0 1px var(--theme-border);
+}
+[data-theme="dark"] .hero-swap-card[data-slot="2"],
+[data-theme="plum_dark"] .hero-swap-card[data-slot="2"] {
+    filter: brightness(0.78);
+    box-shadow: 0 8px 18px -4px rgba(0, 0, 0, 0.48), 0 0 0 1px var(--theme-border);
+}
+
+[data-theme="rose_pastel"] .hero-swap-card[data-slot="0"] {
+    box-shadow: 0 16px 32px -8px rgba(244, 114, 182, 0.18), 0 4px 12px -2px rgba(244, 114, 182, 0.1);
+}
+[data-theme="rose_pastel"] .hero-swap-card[data-slot="0"]:hover {
+    box-shadow: 0 22px 38px -8px rgba(244, 114, 182, 0.24), 0 6px 14px -2px rgba(244, 114, 182, 0.14);
+}
+[data-theme="rose_pastel"] .hero-swap-card[data-slot="1"] {
+    filter: brightness(0.98);
+    box-shadow: 0 10px 20px -6px rgba(244, 114, 182, 0.12);
+}
+[data-theme="rose_pastel"] .hero-swap-card[data-slot="2"] {
+    filter: brightness(0.96);
+    box-shadow: 0 6px 14px -4px rgba(244, 114, 182, 0.08);
+}
+
+@media (max-width: 640px) {
+    @keyframes heroCardSwingOut {
+        0% {
+            transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+            z-index: 50;
+            opacity: 1;
+        }
+        35% {
+            transform: translate3d(48px, -10px, 25px) rotate(8deg) scale(1.01);
+            z-index: 50;
+            opacity: 0.98;
+        }
+        52% {
+            transform: translate3d(30px, -12px, -10px) rotate(4.5deg) scale(0.98);
+            z-index: 15;
+            opacity: 0.96;
+        }
+        100% {
+            transform: translate3d(10px, -8px, -15px) rotate(2deg) scale(0.97);
+            z-index: 20;
+            opacity: 0.94;
+        }
+    }
+}
+
+/* ==========================================================================
+   DYNAMIC SELECTABLE CARDS (RADIO & CHECKBOX CARDS)
+   ========================================================================== */
+label.selectable-card:has(input:checked) {
+    border-color: #4f46e5 !important;
+    background-color: rgba(238, 242, 255, 0.45) !important;
+    box-shadow: 0 0 0 1px #4f46e5 !important;
+}
+
+label.selectable-card-amber:has(input:checked) {
+    border-color: #d97706 !important;
+    background-color: rgba(254, 243, 199, 0.45) !important;
+    box-shadow: 0 0 0 1px #d97706 !important;
+}
+
+label.exercise-card-eligible:has(input:checked) {
+    border-color: #4f46e5 !important;
+    background-color: rgba(238, 242, 255, 0.35) !important;
+    box-shadow: 0 0 0 1px #4f46e5 !important;
+}
+
+[data-theme="dark"] label.selectable-card:has(input:checked),
+[data-theme="plum_dark"] label.selectable-card:has(input:checked),
+[data-theme="dark"] label.exercise-card-eligible:has(input:checked),
+[data-theme="plum_dark"] label.exercise-card-eligible:has(input:checked) {
+    border-color: var(--theme-border-selected) !important;
+    background-color: var(--theme-bg-selected) !important;
+    box-shadow: 0 0 0 1px var(--theme-border-selected) !important;
+}
+
+[data-theme="dark"] label.selectable-card-amber:has(input:checked),
+[data-theme="plum_dark"] label.selectable-card-amber:has(input:checked) {
+    border-color: #f59e0b !important;
+    background-color: rgba(245, 158, 11, 0.15) !important;
+    box-shadow: 0 0 0 1px #f59e0b !important;
+}
+
+[data-theme="rose_pastel"] label.selectable-card:has(input:checked),
+[data-theme="rose_pastel"] label.exercise-card-eligible:has(input:checked) {
+    border-color: var(--theme-primary) !important;
+    background-color: var(--theme-primary-subtle) !important;
+    box-shadow: 0 0 0 1px var(--theme-primary) !important;
+}
+
+/* ==========================================================================
+   MATCHING PAIRS DISTINCT COLOR CODING CHO TỪNG CẶP TỪ
+   ========================================================================== */
+.matched-pair-0 {
+    border-color: #10b981 !important;
+    background-color: #ecfdf5 !important;
+    color: #064e3b !important;
+}
+.matched-pair-1 {
+    border-color: #0284c7 !important;
+    background-color: #f0f9ff !important;
+    color: #0c4a6e !important;
+}
+.matched-pair-2 {
+    border-color: #8b5cf6 !important;
+    background-color: #f5f3ff !important;
+    color: #581c87 !important;
+}
+.matched-pair-3 {
+    border-color: #f59e0b !important;
+    background-color: #fffbeb !important;
+    color: #78350f !important;
+}
+.matched-pair-4 {
+    border-color: #f43f5e !important;
+    background-color: #fff1f2 !important;
+    color: #881337 !important;
+}
+.matched-pair-5 {
+    border-color: #0d9488 !important;
+    background-color: #f0fdfa !important;
+    color: #134e4a !important;
+}
+
+.matched-pair-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    line-height: 1;
+    border-width: 1px;
+    border-style: solid;
+    margin-left: 0.5rem;
+    flex-shrink: 0;
+}
+.matched-pair-badge-0 {
+    background-color: #d1fae5;
+    border-color: #a7f3d0;
+    color: #065f46;
+}
+.matched-pair-badge-1 {
+    background-color: #e0f2fe;
+    border-color: #bae6fd;
+    color: #0369a1;
+}
+.matched-pair-badge-2 {
+    background-color: #ede9fe;
+    border-color: #ddd6fe;
+    color: #6b21a8;
+}
+.matched-pair-badge-3 {
+    background-color: #fef3c7;
+    border-color: #fde68a;
+    color: #92400e;
+}
+.matched-pair-badge-4 {
+    background-color: #ffe4e6;
+    border-color: #fecdd3;
+    color: #9f1239;
+}
+.matched-pair-badge-5 {
+    background-color: #ccfbf1;
+    border-color: #99f6e4;
+    color: #115e59;
+}
+
+/* Dark mode support */
+[data-theme="dark"] .matched-pair-0, [data-theme="plum_dark"] .matched-pair-0 {
+    background-color: rgba(16, 185, 129, 0.22) !important;
+    color: #a7f3d0 !important;
+    border-color: #10b981 !important;
+}
+[data-theme="dark"] .matched-pair-1, [data-theme="plum_dark"] .matched-pair-1 {
+    background-color: rgba(2, 132, 199, 0.22) !important;
+    color: #bae6fd !important;
+    border-color: #38bdf8 !important;
+}
+[data-theme="dark"] .matched-pair-2, [data-theme="plum_dark"] .matched-pair-2 {
+    background-color: rgba(139, 92, 246, 0.22) !important;
+    color: #ddd6fe !important;
+    border-color: #a78bfa !important;
+}
+[data-theme="dark"] .matched-pair-3, [data-theme="plum_dark"] .matched-pair-3 {
+    background-color: rgba(245, 158, 11, 0.22) !important;
+    color: #fde68a !important;
+    border-color: #fbbf24 !important;
+}
+[data-theme="dark"] .matched-pair-4, [data-theme="plum_dark"] .matched-pair-4 {
+    background-color: rgba(244, 63, 94, 0.22) !important;
+    color: #fecdd3 !important;
+    border-color: #fb7185 !important;
+}
+[data-theme="dark"] .matched-pair-5, [data-theme="plum_dark"] .matched-pair-5 {
+    background-color: rgba(13, 148, 136, 0.22) !important;
+    color: #99f6e4 !important;
+    border-color: #2dd4bf !important;
+}
+
 

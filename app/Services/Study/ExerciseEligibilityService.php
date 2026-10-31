@@ -4,34 +4,64 @@ namespace App\Services\Study;
 
 use App\Models\Deck;
 use App\Models\EntryMeaning;
+use App\Models\VocabularyEntry;
 
 class ExerciseEligibilityService
 {
     /**
      * Đánh giá điều kiện khả dụng của tất cả 8 dạng bài học đối với một bộ từ.
-     * Trả về danh sách dạng bài kèm:
-     * - id, name, description, example
-     * - is_eligible: boolean
-     * - eligible_count: int
-     * - disabled_reason: string|null
      *
      * @return array<string, array<string, mixed>>
      */
     public function evaluateDeckExercises(Deck $deck): array
     {
+        return $this->evaluateDecksExercises([$deck->id]);
+    }
+
+    /**
+     * Đánh giá điều kiện khả dụng của tất cả 8 dạng bài học đối với một hoặc nhiều bộ từ.
+     *
+     * @param array<int> $deckIds
+     * @return array<string, array<string, mixed>>
+     */
+    public function evaluateDecksExercises(array $deckIds): array
+    {
         $exerciseTypes = config('polyvocab.study.exercise_types', []);
 
-        // Tổng số nghĩa trong bộ từ
-        $totalMeaningsCount = EntryMeaning::whereHas('vocabularyEntry', function ($q) use ($deck) {
-            $q->where('deck_id', $deck->id);
+        if (empty($deckIds)) {
+            $results = [];
+            foreach ($exerciseTypes as $key => $type) {
+                $localizedName = trans("study.exercises.{$key}.name");
+                if ($localizedName && $localizedName !== "study.exercises.{$key}.name") {
+                    $type['name'] = $localizedName;
+                }
+                $localizedDesc = trans("study.exercises.{$key}.desc");
+                if ($localizedDesc && $localizedDesc !== "study.exercises.{$key}.desc") {
+                    $type['description'] = $localizedDesc;
+                }
+
+                $results[$key] = array_merge($type, [
+                    'is_eligible' => false,
+                    'eligible_count' => 0,
+                    'disabled_reason' => 'Vui lòng chọn ít nhất một bộ từ.',
+                ]);
+            }
+            return $results;
+        }
+
+        // Tổng số nghĩa trong các bộ từ đã chọn
+        $totalMeaningsCount = EntryMeaning::whereHas('vocabularyEntry', function ($q) use ($deckIds) {
+            $q->whereIn('deck_id', $deckIds);
         })->count();
 
-        // Tổng số từ vựng (term) riêng biệt trong bộ từ
-        $distinctTermsCount = $deck->entries()->distinct('term')->count('term');
+        // Tổng số từ vựng (term) riêng biệt trong các bộ từ đã chọn
+        $distinctTermsCount = VocabularyEntry::whereIn('deck_id', $deckIds)
+            ->distinct('term')
+            ->count('term');
 
-        // Số nghĩa có ít nhất một câu ví dụ
-        $meaningsWithExamples = EntryMeaning::whereHas('vocabularyEntry', function ($q) use ($deck) {
-            $q->where('deck_id', $deck->id);
+        // Số nghĩa có ít nhất một câu ví dụ trong các bộ từ đã chọn
+        $meaningsWithExamples = EntryMeaning::whereHas('vocabularyEntry', function ($q) use ($deckIds) {
+            $q->whereIn('deck_id', $deckIds);
         })->has('examples')
         ->with(['vocabularyEntry:id,term', 'examples:id,entry_meaning_id,sentence'])
         ->get();
@@ -52,8 +82,11 @@ class ExerciseEligibilityService
             return false;
         })->count();
 
-        // Hiện tại hệ thống chưa tích hợp tệp audio upload riêng
-        $meaningsWithAudioCount = 0;
+        // Số nghĩa có từ vựng đã có tệp audio hợp lệ
+        $meaningsWithAudioCount = EntryMeaning::whereHas('vocabularyEntry', function ($q) use ($deckIds) {
+            $q->whereIn('deck_id', $deckIds)
+                ->whereNotNull('audio_path');
+        })->count();
 
         $results = [];
 
@@ -73,26 +106,36 @@ class ExerciseEligibilityService
             }
 
             // Kiểm tra yêu cầu audio
+            // Hệ thống hỗ trợ phát âm bằng tệp chất lượng cao Azure TTS (nếu có)
+            // hoặc tự động phát âm bằng Web Speech API của trình duyệt.
+            // Do đó người học luôn có thể chọn luyện tập các dạng bài nghe!
             if (! empty($type['requires_audio'])) {
-                if ($meaningsWithAudioCount === 0) {
-                    $isEligible = false;
-                    $eligibleCount = 0;
-                    $reason = trans('study.reasons.no_audio');
-                }
+                $type['has_server_audio'] = ($meaningsWithAudioCount > 0);
+                $type['server_audio_count'] = $meaningsWithAudioCount;
+                $eligibleCount = $totalMeaningsCount;
             }
 
             // Kiểm tra yêu cầu câu ví dụ (dành riêng cho điền từ)
             if ($isEligible && ! empty($type['requires_examples'])) {
-                if ($meaningsWithExamplesCount === 0) {
-                    $isEligible = false;
-                    $eligibleCount = 0;
-                    $reason = trans('study.reasons.no_examples');
-                } elseif ($clozeEligibleCount === 0) {
-                    $isEligible = false;
-                    $eligibleCount = 0;
-                    $reason = trans('study.reasons.no_suitable_cloze');
+                $aiService = app(\App\Services\Ai\AiSentenceService::class);
+                $isAiConfigured = $aiService->isConfigured();
+                $type['is_ai_configured'] = $isAiConfigured;
+
+                if ($meaningsWithExamplesCount === 0 || $clozeEligibleCount === 0) {
+                    if ($isAiConfigured) {
+                        // Khi đã cấu hình AI, dạng bài Điền từ có thể sử dụng AI để đặt câu tự động
+                        $type['can_use_ai_cloze'] = true;
+                        $eligibleCount = $totalMeaningsCount;
+                    } else {
+                        $isEligible = false;
+                        $eligibleCount = 0;
+                        $reason = ($meaningsWithExamplesCount === 0)
+                            ? trans('study.reasons.no_examples')
+                            : trans('study.reasons.no_suitable_cloze');
+                    }
                 } else {
                     $eligibleCount = $clozeEligibleCount;
+                    $type['can_use_ai_cloze'] = $isAiConfigured;
                 }
             }
 
